@@ -1,0 +1,90 @@
+import { InstallScript } from './components/InstallScript/InstallScript';
+import * as demos from './demos';
+
+## Installation
+
+<InstallScript packages="@gfazioli/mantine-clock" />
+
+After installation import package styles at the root of your application:
+
+```tsx
+import '@gfazioli/mantine-clock/styles.css';
+```
+
+You can import styles within a layer `@layer mantine-clock` by importing `@gfazioli/mantine-clock/styles.layer.css` file.
+
+```tsx
+import '@gfazioli/mantine-clock/styles.layer.css';
+```
+
+## Usage
+
+The `Clock` component displays a clock with customizable hands, ticks, and numbers.
+
+<Demo data={demos.configurator} />
+
+## Clock Hands
+
+The `Clock` component allows you to customize the appearance of the clock hands. You can set the color, size, and other properties of the hour, minute, and second hands.
+
+<Demo data={demos.hands} />
+
+## Clock Numbers
+
+The `Clock` component can display numbers on the clock face. You can customize the font size, color, and visibility of the numbers.
+
+<Demo data={demos.numbers} />
+
+## Clock Number Fonts
+
+The `Clock` component supports custom fonts for the numbers displayed on the clock face. You can choose from various font styles to match your design preferences.
+
+<Demo data={demos.numberFonts} />
+
+## Timezone Support
+
+The `Clock` component supports displaying time in different timezones around the world. Use the `timezone` prop to specify a timezone string, allowing you to create world clocks or display time for specific regions.
+
+<Demo data={demos.timezone} />
+
+### World Clocks Example
+
+Here's an example showing multiple clocks displaying time in different regions simultaneously:
+
+<Demo data={demos.worldClocks} />
+
+### Supported Timezones
+
+The timezone prop accepts any valid IANA timezone identifier. Some common examples include:
+
+- **UTC**: `'UTC'` - Coordinated Universal Time
+- **Americas**: `'America/New_York'`, `'America/Los_Angeles'`, `'America/Chicago'`, `'America/Toronto'`
+- **Europe**: `'Europe/London'`, `'Europe/Berlin'`, `'Europe/Paris'`, `'Europe/Rome'`
+- **Asia**: `'Asia/Tokyo'`, `'Asia/Shanghai'`, `'Asia/Singapore'`, `'Asia/Dubai'`
+- **Oceania**: `'Australia/Sydney'`, `'Australia/Melbourne'`, `'Pacific/Auckland'`
+
+When no timezone is specified, the clock displays the local time of the user's system.
+
+### Usage Examples
+
+```tsx
+import { Clock } from '@gfazioli/mantine-clock';
+
+function Demo() {
+  return (
+    <div>
+      {/* Display Tokyo time */}
+      <Clock timezone="Asia/Tokyo" />
+
+      {/* Display New York time */}
+      <Clock timezone="America/New_York" />
+
+      {/* Display UTC time */}
+      <Clock timezone="UTC" />
+
+      {/* Display local time (default) */}
+      <Clock />
+    </div>
+  );
+}
+```

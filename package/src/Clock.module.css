@@ -1,0 +1,219 @@
+.root {
+  --clock-background-color: var(--clock-color, var(--mantine-color-gray-1));
+  --clock-hour-ticks-color-resolved: var(--clock-hour-ticks-color, var(--mantine-color-gray-9));
+  --clock-minute-ticks-color-resolved: var(--clock-minute-ticks-color, var(--mantine-color-gray-5));
+  --clock-primary-numbers-color-resolved: var(
+    --clock-primary-numbers-color,
+    var(--mantine-color-dark-9)
+  );
+  --clock-secondary-numbers-color-resolved: var(
+    --clock-secondary-numbers-color,
+    var(--mantine-color-dark-6)
+  );
+
+  --clock-minute-hand-color-resolved: var(--clock-minute-hand-color, var(--mantine-color-dark-6));
+  --clock-hour-hand-color-resolved: var(--clock-hour-hand-color, var(--mantine-color-dark-6));
+
+  --clock-second-hand-color-resolved: var(--clock-second-hand-color, var(--mantine-color-red-6));
+
+  /* Dark theme support */
+  @mixin dark {
+    --clock-background-color: var(--clock-color, var(--mantine-color-dark-8));
+    --clock-hour-ticks-color-resolved: var(--clock-hour-ticks-color, var(--mantine-color-gray-0));
+    --clock-minute-ticks-color-resolved: var(
+      --clock-minute-ticks-color,
+      var(--mantine-color-gray-8)
+    );
+    --clock-primary-numbers-color-resolved: var(
+      --clock-primary-numbers-color,
+      var(--mantine-color-gray-0)
+    );
+    --clock-secondary-numbers-color-resolved: var(
+      --clock-secondary-numbers-color,
+      var(--mantine-color-gray-4)
+    );
+    --clock-minute-hand-color-resolved: var(--clock-minute-hand-color, var(--mantine-color-dark-5));
+    --clock-hour-hand-color-resolved: var(--clock-hour-hand-color, var(--mantine-color-dark-5));
+  }
+
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--clock-size, 400px);
+  height: var(--clock-size, 400px);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.clockContainer {
+  position: relative;
+  width: var(--clock-size, 400px);
+  height: var(--clock-size, 400px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2;
+}
+
+/* Glass effect wrapper */
+.glassWrapper {
+  position: relative;
+  z-index: 2;
+  border-radius: 50%;
+  background: transparent;
+  pointer-events: none;
+  transition: all 400ms cubic-bezier(0.25, 1, 0.5, 1);
+  perspective: 1000px;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
+.clockFace {
+  --clock-border-width: clamp(2px, 0.0625em, 4px);
+  position: relative;
+  width: var(--clock-size, 400px);
+  height: var(--clock-size, 400px);
+  border-radius: 50%;
+  background-color: var(--clock-background-color);
+
+  z-index: 3;
+  overflow: hidden;
+  transition: all 400ms cubic-bezier(0.25, 1, 0.5, 1);
+  user-select: none;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  will-change: transform, box-shadow;
+}
+
+/* Inner blur circle */
+.centerBlur {
+  position: absolute;
+  width: calc(var(--clock-size, 400px) * 0.09);
+  height: calc(var(--clock-size, 400px) * 0.09);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  backdrop-filter: blur(1px);
+  z-index: 16;
+  pointer-events: none;
+  background-color: rgba(255, 255, 255, 0.35);
+  box-shadow:
+    0 0 20px rgba(255, 255, 255, 0.4),
+    inset 0 0 8px rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(0, 0, 0, 0.03);
+
+  @mixin dark {
+    background-color: rgba(0, 0, 0, 0.35);
+    box-shadow:
+      0 0 20px rgba(0, 0, 0, 0.4),
+      inset 0 0 8px rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(0, 0, 0, 0.03);
+  }
+}
+
+/* Clock center dot */
+.centerDot {
+  position: absolute;
+  background: var(--clock-second-hand-color-resolved);
+  border-radius: 50%;
+  z-index: 17;
+  box-shadow: 0 0 8px var(--clock-second-hand-color-resolved);
+}
+
+.hourMarks {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 14;
+}
+
+/* Minute marker as lines */
+.minuteTick {
+  position: absolute;
+  width: calc(var(--clock-size, 400px) * 0.0025);
+  height: calc(var(--clock-size, 400px) * 0.025);
+  background-color: var(--clock-minute-ticks-color-resolved);
+  opacity: var(--clock-minute-ticks-opacity, 1);
+  box-shadow: 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+.hourTick {
+  position: absolute;
+  width: calc(var(--clock-size, 400px) * 0.005);
+  height: calc(var(--clock-size, 400px) * 0.0375);
+  background-color: var(--clock-hour-ticks-color-resolved);
+  opacity: var(--clock-hour-ticks-opacity, 1);
+  box-shadow: 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+.number {
+  position: absolute;
+  font-weight: 500;
+  color: var(--clock-hour-number-color);
+  text-align: center;
+  z-index: 15;
+  opacity: var(--clock-hour-number-opacity, 1);
+  transition: opacity 0.3s ease;
+  transform: translate(-50%, -50%);
+  user-select: none;
+  pointer-events: none;
+}
+
+.primaryNumber {
+  color: var(--clock-primary-numbers-color-resolved);
+  opacity: var(--clock-primary-numbers-opacity, 1);
+}
+
+.secondaryNumber {
+  color: var(--clock-secondary-numbers-color-resolved);
+  opacity: var(--clock-secondary-numbers-opacity, 1);
+}
+
+.hand {
+  position: absolute;
+  transform-origin: center bottom;
+  z-index: 15;
+  will-change: transform;
+}
+
+.hourHand {
+  background-color: var(--clock-hour-hand-color-resolved);
+  box-shadow: 0 0 3px var(--clock-hour-hand-color-resolved);
+}
+
+.minuteHand {
+  background-color: var(--clock-minute-hand-color-resolved);
+  box-shadow: 0 0 3px var(--clock-minute-hand-color-resolved);
+}
+
+/* Second hand container */
+.secondHandContainer {
+  position: absolute;
+  z-index: 17;
+  will-change: transform;
+}
+
+/* Second hand */
+.secondHand {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  border-radius: calc(var(--clock-size, 400px) * 0.04);
+  box-shadow: 0 0 5px var(--clock-second-hand-color-resolved);
+  background-color: var(--clock-second-hand-color-resolved);
+}
+
+/* Second hand counterweight */
+.secondHandCounterweight {
+  position: absolute;
+  height: calc(var(--clock-size, 400px) * 0.035);
+  bottom: calc(var(--clock-size, 400px) * -0.035);
+  border-radius: calc(var(--clock-size, 400px) * 0.04);
+  background-color: var(--clock-second-hand-color-resolved);
+  box-shadow: 0 0 5px var(--clock-second-hand-color-resolved);
+}
