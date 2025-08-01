@@ -219,7 +219,8 @@ function ControllableCountdown() {
 - **Accessibility**: Built with WCAG compliance and screen reader support
 - **Performance Optimized**: Efficient updates with minimal re-renders
 - **Responsive Design**: Adapts to different screen sizes automatically
-```
+
+
 <div align="center">
   
 [![Star History Chart](https://api.star-history.com/svg?repos=gfazioli/mantine-clock&type=Timeline)](https://www.star-history.com/#gfazioli/mantine-clock&Timeline)
