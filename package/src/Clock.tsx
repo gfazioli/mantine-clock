@@ -173,10 +173,10 @@ export interface ClockBaseProps {
   /** Timezone for displaying time in different countries (e.g., 'America/New_York', 'Europe/London', 'Asia/Tokyo') */
   timezone?: Timezone;
 
-  /** Whether the clock should update in real time (default: true) */
+  /** Whether the clock should update in real time (default: `true`) */
   running?: boolean;
 
-  /** Time value to display. Can be a string ("10:30", "18:15:07"), Date, or dayjs object. When running=true, this sets the starting time. */
+  /** Time value to display. Can be a string ("10:30", "18:15:07"), Date, or dayjs object. When running=true, this sets the starting time. When running=false and no value is provided, displays the current time. */
   value?: string | Date | dayjs.Dayjs;
 }
 
@@ -279,7 +279,9 @@ const varsResolver = createVarsResolver<ClockFactory>(
  * Parse various time value formats into a Date object
  */
 const parseTimeValue = (value: string | Date | dayjs.Dayjs | undefined): Date | null => {
-  if (!value) return null;
+  if (!value) {
+    return null;
+  }
 
   if (value instanceof Date) {
     return value;
@@ -693,13 +695,12 @@ export const Clock = factory<ClockFactory>((_props, ref) => {
     const parsedValue = parseTimeValue(value);
 
     if (!running) {
-      // Static mode: show the parsed value or default to 12:00:00
+      // Static mode: show the parsed value or default to current time
       if (parsedValue) {
         return parsedValue;
       }
-      const defaultTime = new Date();
-      defaultTime.setHours(12, 0, 0, 0);
-      return defaultTime;
+      // Use current time instead of fixed 12:00:00
+      return time;
     }
 
     // Running mode

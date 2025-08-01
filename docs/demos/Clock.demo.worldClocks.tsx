@@ -5,23 +5,23 @@ import { MantineDemo } from '@mantinex/demo';
 function Demo() {
   return (
     <Group grow>
-      <Stack align="center" gap={0}>
+      <Stack align="center">
         <Clock timezone="America/New_York" size={200} />
         <Text fw={600} c="dimmed">
           New York
         </Text>
       </Stack>
 
-      <Stack align="center" gap={0}>
+      <Stack align="center">
         <Clock timezone="Europe/London" size={200} />
-        <Text size="sm" fw={600} c="dimmed">
+        <Text fw={600} c="dimmed">
           London
         </Text>
       </Stack>
 
-      <Stack align="center" gap={0}>
+      <Stack align="center">
         <Clock timezone="Asia/Tokyo" size={200} />
-        <Text size="sm" fw={600} c="dimmed">
+        <Text fw={600} c="dimmed">
           Tokyo
         </Text>
       </Stack>
@@ -38,26 +38,26 @@ import { Group, Stack, Text } from '@mantine/core';
 
 function Demo() {
   return (
-    <Group justify="center">
+    <Group grow>
       <Stack align="center">
+        <Clock timezone="America/New_York" size={200} />
         <Text fw={600} c="dimmed">
           New York
         </Text>
-        <Clock timezone="America/New_York" />
       </Stack>
 
-      <Stack align="center" gap="sm">
-        <Text size="sm" fw={600} c="dimmed">
+      <Stack align="center">
+        <Clock timezone="Europe/London" size={200} />
+        <Text fw={600} c="dimmed">
           London
         </Text>
-        <Clock timezone="Europe/London" />
       </Stack>
 
-      <Stack align="center" gap="sm">
-        <Text size="sm" fw={600} c="dimmed">
+      <Stack align="center">
+        <Clock timezone="Asia/Tokyo" size={200} />
+        <Text fw={600} c="dimmed">
           Tokyo
         </Text>
-        <Clock timezone="Asia/Tokyo" />
       </Stack>
     </Group>
   );

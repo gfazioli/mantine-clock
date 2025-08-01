@@ -8,5 +8,6 @@ export type {
 } from './Clock';
 
 export { useClock } from './hooks/use-clock';
+export type { ClockData, UseClockOptions } from './hooks/use-clock';
 export { useClockCountDown } from './hooks/use-clock-count-down';
 export type { ClockCountDownData, UseClockCountDownOptions } from './hooks/use-clock-count-down';

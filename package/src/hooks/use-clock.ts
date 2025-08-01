@@ -3,7 +3,8 @@ import isLeapYear from 'dayjs/plugin/isLeapYear';
 import timezonePlugin from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useMounted } from '@mantine/hooks';
 
 dayjs.extend(utc);
 dayjs.extend(timezonePlugin);
@@ -13,7 +14,7 @@ dayjs.extend(isLeapYear);
 /**
  * Options for configuring the `useClock` hook.
  */
-interface UseClockOptions {
+export interface UseClockOptions {
   /** Whether the clock is active and updating. */
   enabled?: boolean;
   /** The timezone to use for the clock. */
@@ -33,7 +34,7 @@ interface UseClockOptions {
 /**
  * Data returned by the `useClock` hook.
  */
-interface ClockData {
+export interface ClockData {
   /** The current year. */
   year: number;
   /** The current month (1-12). */
@@ -54,6 +55,16 @@ interface ClockData {
   milliseconds: number;
   /** Whether the time is AM or PM (only relevant if use24Hours is false). */
   amPm?: 'AM' | 'PM';
+  /** Whether the clock is currently running and updating. */
+  isRunning: boolean;
+  /** Function to start the clock. */
+  start: () => void;
+  /** Function to pause the clock. */
+  pause: () => void;
+  /** Function to resume the clock. */
+  resume: () => void;
+  /** Function to reset the clock to its initial state. */
+  reset: () => void;
 }
 
 /**
@@ -82,10 +93,37 @@ export function useClock({
   padMinutes = false,
   padHours = false,
 }: UseClockOptions): ClockData {
-  const [time, setTime] = useState(() => dayjs().tz(timezone));
+  const mounted = useMounted();
+  const [time, setTime] = useState<dayjs.Dayjs | null>(null);
+  const [isRunning, setIsRunning] = useState(false);
 
+  // Refs
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const initialEnabledRef = useRef(enabled); // Store initial enabled state - set once
+
+  // Initialize running state based on enabled when mounted
   useEffect(() => {
-    if (!enabled) {
+    if (!mounted) {
+      return;
+    }
+
+    // Initialize time immediately when mounted, regardless of running state
+    setTime(dayjs().tz(timezone));
+
+    if (enabled) {
+      setIsRunning(true);
+    } else {
+      setIsRunning(false);
+    }
+  }, [mounted, enabled, timezone]);
+
+  // Clock update logic
+  useEffect(() => {
+    if (!mounted || !isRunning) {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
       return;
     }
 
@@ -94,11 +132,77 @@ export function useClock({
     };
 
     updateClock();
-    const interval = setInterval(updateClock, updateFrequency);
+    intervalRef.current = setInterval(updateClock, updateFrequency);
 
-    return () => clearInterval(interval);
-  }, [enabled, timezone, updateFrequency]);
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [mounted, isRunning, timezone, updateFrequency]);
 
+  // Control functions
+  const start = useCallback(() => {
+    if (!mounted) {
+      return;
+    }
+    // Update time immediately when starting
+    setTime(dayjs().tz(timezone));
+    setIsRunning(true);
+  }, [mounted, timezone]);
+
+  const pause = useCallback(() => {
+    setIsRunning(false);
+  }, []);
+
+  const resume = useCallback(() => {
+    if (!mounted) {
+      return;
+    }
+    // Update time immediately when resuming
+    setTime(dayjs().tz(timezone));
+    setIsRunning(true);
+  }, [mounted, timezone]);
+
+  const reset = useCallback(() => {
+    setIsRunning(false);
+
+    // Restore initial enabled state
+    if (initialEnabledRef.current) {
+      // If initially enabled, restart immediately with current time
+      setTime(dayjs().tz(timezone));
+      setIsRunning(true);
+    } else {
+      // If initially disabled, set to current time but stay paused
+      setTime(dayjs().tz(timezone));
+    }
+  }, [timezone]);
+
+  // Return static values when disabled or during SSR
+  if (!mounted || !time) {
+    const staticHours = padHours ? '00' : 0;
+    const staticMinutes = padMinutes ? '00' : 0;
+    const staticSeconds = padSeconds ? '00' : 0;
+
+    return {
+      year: 2024,
+      month: 1,
+      day: 1,
+      week: 1,
+      isLeap: false,
+      hours: staticHours,
+      minutes: staticMinutes,
+      seconds: staticSeconds,
+      milliseconds: 0,
+      amPm: use24Hours ? undefined : 'AM',
+      isRunning: false,
+      start: () => {},
+      pause: () => {},
+      resume: () => {},
+      reset: () => {},
+    };
+  }
   const year = time.year();
   const month = time.month() + 1; // Months are 0-indexed in dayjs
   const day = time.date();
@@ -136,5 +240,10 @@ export function useClock({
     seconds,
     milliseconds,
     amPm,
+    isRunning,
+    start,
+    pause,
+    resume,
+    reset,
   };
 }

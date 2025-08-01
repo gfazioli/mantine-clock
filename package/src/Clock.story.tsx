@@ -375,7 +375,7 @@ export const StaticClock: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'A static clock that shows 12:00:00 by default when no value is provided.',
+        story: 'A static clock that shows the current time when no value is provided.',
       },
     },
   },
@@ -436,7 +436,7 @@ export const StaticClockVariations: Story = {
           <Text size="sm" c="dimmed" ta="center">
             Default Static
             <br />
-            (12:00:00)
+            (Current Time)
           </Text>
         </Stack>
 
@@ -477,7 +477,6 @@ export const StaticClockVariations: Story = {
       <Group gap="xl" align="center">
         <Stack align="center" gap="sm">
           <Clock
-            running={true}
             value="08:00:00"
             size={200}
             secondHandBehavior="smooth"
@@ -492,7 +491,6 @@ export const StaticClockVariations: Story = {
 
         <Stack align="center" gap="sm">
           <Clock
-            running={true}
             value="14:30:45"
             size={200}
             secondHandBehavior="tick"

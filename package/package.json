@@ -1,6 +1,6 @@
 {
   "name": "@gfazioli/mantine-clock",
-  "version": "2.5.1",
+  "version": "0.9.0",
   "description": "Clock component is a wrapper for any component that can be flipped. It is used to create cards, flip boxes and more.",
   "homepage": "https://gfazioli.github.io/mantine-clock/",
   "packageManager": "yarn@4.0.1",

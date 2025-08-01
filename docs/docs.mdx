@@ -1,5 +1,405 @@
 import { InstallScript } from './components/InstallScript/InstallScript';
+import { PropsTable } from './components/PropsTable/PropsTable';
 import * as demos from './demos';
+
+export const hooksData = {
+  useClock: {
+    props: {
+      enabled: {
+        name: 'enabled',
+        type: { name: 'boolean' },
+        description: 'Whether the clock is active and updating',
+        required: false,
+        defaultValue: { value: 'true' },
+      },
+      timezone: {
+        name: 'timezone',
+        type: { name: 'string' },
+        description: 'The timezone to use for the clock',
+        required: false,
+        defaultValue: { value: "'UTC'" },
+      },
+      updateFrequency: {
+        name: 'updateFrequency',
+        type: { name: 'number' },
+        description:
+          'The frequency (in milliseconds) at which the clock updates',
+        required: false,
+        defaultValue: { value: '1000' },
+      },
+      use24Hours: {
+        name: 'use24Hours',
+        type: { name: 'boolean' },
+        description:
+          'Whether to use 24-hour format or 12-hour format',
+        required: false,
+        defaultValue: { value: 'true' },
+      },
+      padSeconds: {
+        name: 'padSeconds',
+        type: { name: 'boolean' },
+        description:
+          'Whether to pad single-digit seconds with a leading zero',
+        required: false,
+        defaultValue: { value: 'false' },
+      },
+      padMinutes: {
+        name: 'padMinutes',
+        type: { name: 'boolean' },
+        description:
+          'Whether to pad single-digit minutes with a leading zero',
+        required: false,
+        defaultValue: { value: 'false' },
+      },
+      padHours: {
+        name: 'padHours',
+        type: { name: 'boolean' },
+        description:
+          'Whether to pad single-digit hours with a leading zero',
+        required: false,
+        defaultValue: { value: 'false' },
+      },
+    },
+  },
+  useClockCountDown: {
+    props: {
+      enabled: {
+        name: 'enabled',
+        type: { name: 'boolean' },
+        description: 'Whether the countdown is active and updating',
+        required: false,
+        defaultValue: { value: 'true' },
+      },
+      timezone: {
+        name: 'timezone',
+        type: { name: 'string' },
+        description: 'The timezone to use for countdown calculations',
+        required: false,
+        defaultValue: { value: "'UTC'" },
+      },
+      updateFrequency: {
+        name: 'updateFrequency',
+        type: { name: 'number' },
+        description:
+          'The frequency (in milliseconds) at which the countdown updates',
+        required: false,
+        defaultValue: { value: '1000' },
+      },
+      use24Hours: {
+        name: 'use24Hours',
+        type: { name: 'boolean' },
+        description:
+          'Whether to use 24-hour format or 12-hour format',
+        required: false,
+        defaultValue: { value: 'true' },
+      },
+      padSeconds: {
+        name: 'padSeconds',
+        type: { name: 'boolean' },
+        description:
+          'Whether to pad single-digit seconds with a leading zero',
+        required: false,
+        defaultValue: { value: 'false' },
+      },
+      padMinutes: {
+        name: 'padMinutes',
+        type: { name: 'boolean' },
+        description:
+          'Whether to pad single-digit minutes with a leading zero',
+        required: false,
+        defaultValue: { value: 'false' },
+      },
+      padHours: {
+        name: 'padHours',
+        type: { name: 'boolean' },
+        description:
+          'Whether to pad single-digit hours with a leading zero',
+        required: false,
+        defaultValue: { value: 'false' },
+      },
+      targetDate: {
+        name: 'targetDate',
+        type: { name: 'Date | string' },
+        description:
+          'Target date for the countdown (Date object or ISO string)',
+        required: false,
+        defaultValue: null,
+      },
+      hours: {
+        name: 'hours',
+        type: { name: 'number' },
+        description:
+          'Number of hours to count down from current time',
+        required: false,
+        defaultValue: { value: '0' },
+      },
+      minutes: {
+        name: 'minutes',
+        type: { name: 'number' },
+        description:
+          'Number of minutes to count down from current time',
+        required: false,
+        defaultValue: { value: '0' },
+      },
+      seconds: {
+        name: 'seconds',
+        type: { name: 'number' },
+        description:
+          'Number of seconds to count down from current time',
+        required: false,
+        defaultValue: { value: '0' },
+      },
+      onCountDownCompleted: {
+        name: 'onCountDownCompleted',
+        type: { name: 'function' },
+        description:
+          'Callback function called when countdown reaches zero',
+        required: false,
+        defaultValue: null,
+      },
+    },
+  },
+  useClockReturns: {
+    props: {
+      year: {
+        name: 'year',
+        type: { name: 'number' },
+        description: 'The current year',
+        required: true,
+        defaultValue: null,
+      },
+      month: {
+        name: 'month',
+        type: { name: 'number' },
+        description: 'The current month (1-12)',
+        required: true,
+        defaultValue: null,
+      },
+      day: {
+        name: 'day',
+        type: { name: 'number' },
+        description: 'The current day of the month',
+        required: true,
+        defaultValue: null,
+      },
+      week: {
+        name: 'week',
+        type: { name: 'number' },
+        description: 'The current week of the year',
+        required: true,
+        defaultValue: null,
+      },
+      isLeap: {
+        name: 'isLeap',
+        type: { name: 'boolean' },
+        description: 'Whether the current year is a leap year',
+        required: true,
+        defaultValue: null,
+      },
+      hours: {
+        name: 'hours',
+        type: { name: 'number | string' },
+        description:
+          'The current hour (adjusted for 12/24-hour format)',
+        required: true,
+        defaultValue: null,
+      },
+      minutes: {
+        name: 'minutes',
+        type: { name: 'number | string' },
+        description: 'The current minute',
+        required: true,
+        defaultValue: null,
+      },
+      seconds: {
+        name: 'seconds',
+        type: { name: 'number | string' },
+        description: 'The current second',
+        required: true,
+        defaultValue: null,
+      },
+      milliseconds: {
+        name: 'milliseconds',
+        type: { name: 'number' },
+        description: 'The current millisecond',
+        required: true,
+        defaultValue: null,
+      },
+      amPm: {
+        name: 'amPm',
+        type: { name: "'AM' | 'PM' | undefined" },
+        description:
+          'Whether the time is AM or PM (only when use24Hours is false)',
+        required: true,
+        defaultValue: null,
+      },
+      isRunning: {
+        name: 'isRunning',
+        type: { name: 'boolean' },
+        description:
+          'Whether the clock is currently running and updating',
+        required: true,
+        defaultValue: null,
+      },
+      start: {
+        name: 'start',
+        type: { name: 'function' },
+        description: 'Function to start the clock',
+        required: true,
+        defaultValue: null,
+      },
+      pause: {
+        name: 'pause',
+        type: { name: 'function' },
+        description: 'Function to pause the clock',
+        required: true,
+        defaultValue: null,
+      },
+      resume: {
+        name: 'resume',
+        type: { name: 'function' },
+        description: 'Function to resume a paused clock',
+        required: true,
+        defaultValue: null,
+      },
+      reset: {
+        name: 'reset',
+        type: { name: 'function' },
+        description:
+          'Function to reset the clock to its initial state',
+        required: true,
+        defaultValue: null,
+      },
+    },
+  },
+  useClockCountDownReturns: {
+    props: {
+      year: {
+        name: 'year',
+        type: { name: 'number' },
+        description: 'The remaining years',
+        required: true,
+        defaultValue: null,
+      },
+      month: {
+        name: 'month',
+        type: { name: 'number' },
+        description: 'The remaining months (1-12)',
+        required: true,
+        defaultValue: null,
+      },
+      day: {
+        name: 'day',
+        type: { name: 'number' },
+        description: 'The remaining days',
+        required: true,
+        defaultValue: null,
+      },
+      week: {
+        name: 'week',
+        type: { name: 'number' },
+        description: 'The remaining weeks',
+        required: true,
+        defaultValue: null,
+      },
+      isLeap: {
+        name: 'isLeap',
+        type: { name: 'boolean' },
+        description: 'Whether the target year is a leap year',
+        required: true,
+        defaultValue: null,
+      },
+      hours: {
+        name: 'hours',
+        type: { name: 'number | string' },
+        description:
+          'The remaining hours (adjusted for 12/24-hour format)',
+        required: true,
+        defaultValue: null,
+      },
+      minutes: {
+        name: 'minutes',
+        type: { name: 'number | string' },
+        description: 'The remaining minutes',
+        required: true,
+        defaultValue: null,
+      },
+      seconds: {
+        name: 'seconds',
+        type: { name: 'number | string' },
+        description: 'The remaining seconds',
+        required: true,
+        defaultValue: null,
+      },
+      milliseconds: {
+        name: 'milliseconds',
+        type: { name: 'number' },
+        description: 'The remaining milliseconds',
+        required: true,
+        defaultValue: null,
+      },
+      amPm: {
+        name: 'amPm',
+        type: { name: "'AM' | 'PM' | undefined" },
+        description:
+          'Whether the time is AM or PM (only when use24Hours is false)',
+        required: true,
+        defaultValue: null,
+      },
+      isCompleted: {
+        name: 'isCompleted',
+        type: { name: 'boolean' },
+        description:
+          'Whether the countdown has completed (reached zero)',
+        required: true,
+        defaultValue: null,
+      },
+      isRunning: {
+        name: 'isRunning',
+        type: { name: 'boolean' },
+        description: 'Whether the countdown is currently running',
+        required: true,
+        defaultValue: null,
+      },
+      totalMilliseconds: {
+        name: 'totalMilliseconds',
+        type: { name: 'number' },
+        description: 'Total remaining time in milliseconds',
+        required: true,
+        defaultValue: null,
+      },
+      start: {
+        name: 'start',
+        type: { name: 'function' },
+        description: 'Function to start the countdown',
+        required: true,
+        defaultValue: null,
+      },
+      pause: {
+        name: 'pause',
+        type: { name: 'function' },
+        description: 'Function to pause the countdown',
+        required: true,
+        defaultValue: null,
+      },
+      resume: {
+        name: 'resume',
+        type: { name: 'function' },
+        description: 'Function to resume a paused countdown',
+        required: true,
+        defaultValue: null,
+      },
+      reset: {
+        name: 'reset',
+        type: { name: 'function' },
+        description:
+          'Function to reset the countdown to its initial state',
+        required: true,
+        defaultValue: null,
+      },
+    },
+  },
+};
 
 ## Installation
 
@@ -22,6 +422,18 @@ import '@gfazioli/mantine-clock/styles.layer.css';
 The `Clock` component displays a clock with customizable hands, ticks, and numbers.
 
 <Demo data={demos.configurator} />
+
+## Static Clock with Value
+
+The `Clock` component can display a static time using the `value` prop. When `running` is set to `false`, the clock will show the specified time without animation. If no `value` is provided, it displays the current time. The `value` prop accepts time strings in various formats or Date objects.
+
+<Demo data={demos.staticValue} />
+
+## Running Clock with Initial Value
+
+You can also set an initial time value for a running clock. The clock will start from the specified time and continue running in real time.
+
+<Demo data={demos.runningValue} />
 
 ## Clock Hands
 
@@ -88,3 +500,53 @@ function Demo() {
   );
 }
 ```
+
+## Hooks
+
+### useClock Hook
+
+The `useClock` hook provides real-time clock data with support for timezones, formatting options, and update frequency control. This hook is perfect for creating digital clocks, displaying time information, or building custom time-based components.
+
+<Demo data={demos.useClockBasic} />
+
+#### World Clocks with useClock
+
+You can use multiple instances of the `useClock` hook to display time in different timezones simultaneously:
+
+<Demo data={demos.useClockWorldClocks} />
+
+#### useClock API
+
+The `useClock` hook accepts the following options:
+
+<PropsTable component="useClock" query="" data={hooksData} />
+
+The hook returns an object with the following properties:
+
+<PropsTable component="useClockReturns" query="" data={hooksData} />
+
+### useClockCountDown Hook
+
+The `useClockCountDown` hook provides real-time countdown functionality with support for target dates, duration-based countdowns, and completion callbacks. Perfect for creating countdown timers, event countdowns, or deadline trackers.
+
+<Demo data={demos.useClockCountDownInteractive} />
+
+#### Countdown to Specific Dates
+
+You can create countdowns to specific target dates using the `targetDate` option:
+
+<Demo data={demos.useClockCountDownTargetDates} />
+
+#### useClockCountDown API
+
+The `useClockCountDown` hook accepts the following options:
+
+<PropsTable component="useClockCountDown" query="" data={hooksData} />
+
+The hook returns an object with the following properties:
+
+<PropsTable
+  component="useClockCountDownReturns"
+  query=""
+  data={hooksData}
+/>

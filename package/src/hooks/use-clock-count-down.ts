@@ -4,7 +4,14 @@ import isLeapYear from 'dayjs/plugin/isLeapYear';
 import timezonePlugin from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useMounted } from '@mantine/hooks';
+
+dayjs.extend(utc);
+dayjs.extend(timezonePlugin);
+dayjs.extend(weekOfYear);
+dayjs.extend(isLeapYear);
+dayjs.extend(duration);
 
 dayjs.extend(utc);
 dayjs.extend(timezonePlugin);
@@ -68,8 +75,18 @@ export interface ClockCountDownData {
   amPm?: 'AM' | 'PM';
   /** Whether the countdown has completed (reached zero). */
   isCompleted: boolean;
+  /** Whether the countdown is currently running. */
+  isRunning: boolean;
   /** Total remaining time in milliseconds. */
   totalMilliseconds: number;
+  /** Start the countdown */
+  start: () => void;
+  /** Pause/stop the countdown */
+  pause: () => void;
+  /** Reset the countdown to initial values */
+  reset: () => void;
+  /** Resume the countdown from current position */
+  resume: () => void;
 }
 
 /**
@@ -123,12 +140,29 @@ export function useClockCountDown({
   seconds = 0,
   onCountDownCompleted,
 }: UseClockCountDownOptions): ClockCountDownData {
-  const [remainingTime, setRemainingTime] = useState(0);
-  const completedRef = useRef(false);
-  const targetDateRef = useRef<dayjs.Dayjs | null>(null);
+  const mounted = useMounted();
 
-  // Initialize target date once when component mounts or key params change
+  // State
+  const [remainingTime, setRemainingTime] = useState(0);
+  const [isRunning, setIsRunning] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
+
+  // Refs
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const initialDurationRef = useRef(0);
+  const targetDateRef = useRef<dayjs.Dayjs | null>(null);
+  const completedCallbackRef = useRef(onCountDownCompleted);
+  const initialEnabledRef = useRef(enabled); // Store initial enabled state - set once
+
+  // Update callback ref when it changes
   useEffect(() => {
+    completedCallbackRef.current = onCountDownCompleted;
+  }, [onCountDownCompleted]); // Calculate initial duration
+  const calculateInitialDuration = useCallback(() => {
+    if (!mounted) {
+      return 0;
+    }
+
     let target: dayjs.Dayjs;
 
     if (targetDate) {
@@ -140,6 +174,7 @@ export function useClockCountDown({
       const s = Math.max(0, seconds);
 
       if (h === 0 && m === 0 && s === 0) {
+        // Default to 1 hour if no duration specified
         target = now.add(1, 'hour');
       } else {
         target = now.add(h, 'hour').add(m, 'minute').add(s, 'second');
@@ -147,58 +182,152 @@ export function useClockCountDown({
     }
 
     targetDateRef.current = target;
-    completedRef.current = false;
-
-    // Immediately calculate initial remaining time
     const now = dayjs().tz(timezone);
-    const diff = target.diff(now);
-    setRemainingTime(Math.max(0, diff));
-  }, [targetDate, hours, minutes, seconds, timezone]);
+    return Math.max(0, target.diff(now));
+  }, [targetDate, hours, minutes, seconds, timezone, mounted]);
 
-  // Timer effect
+  // Initialize duration when parameters change
   useEffect(() => {
-    if (!enabled || !targetDateRef.current) {
+    if (!mounted) {
       return;
     }
 
-    const timer = setInterval(() => {
-      const now = dayjs().tz(timezone);
-      const diff = targetDateRef.current!.diff(now);
+    const duration = calculateInitialDuration();
+    initialDurationRef.current = duration;
+    setRemainingTime(duration);
+    setIsCompleted(duration <= 0);
 
-      if (diff <= 0) {
-        setRemainingTime(0);
-        if (!completedRef.current && onCountDownCompleted) {
-          completedRef.current = true;
-          onCountDownCompleted();
-        }
-      } else {
-        setRemainingTime(diff);
+    // Auto-start if enabled
+    if (enabled && duration > 0) {
+      setIsRunning(true);
+    } else {
+      setIsRunning(false);
+    }
+  }, [mounted, calculateInitialDuration, enabled]);
+
+  // Timer logic
+  useEffect(() => {
+    if (!mounted || !isRunning || isCompleted) {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
       }
+      return;
+    }
+
+    intervalRef.current = setInterval(() => {
+      setRemainingTime((prev) => {
+        const newTime = Math.max(0, prev - updateFrequency);
+
+        if (newTime <= 0) {
+          setIsCompleted(true);
+          setIsRunning(false);
+
+          // Call completion callback
+          if (completedCallbackRef.current) {
+            completedCallbackRef.current();
+          }
+        }
+
+        return newTime;
+      });
     }, updateFrequency);
 
-    return () => clearInterval(timer);
-  }, [enabled, updateFrequency, timezone, onCountDownCompleted]);
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [mounted, isRunning, isCompleted, updateFrequency]);
 
-  const isCompleted = remainingTime <= 0;
+  // Control functions
+  const start = useCallback(() => {
+    if (!mounted || isCompleted) {
+      return;
+    }
+    setIsRunning(true);
+  }, [mounted, isCompleted]);
 
-  if (isCompleted) {
+  const pause = useCallback(() => {
+    setIsRunning(false);
+  }, []);
+
+  const resume = useCallback(() => {
+    if (!mounted || isCompleted || remainingTime <= 0) {
+      return;
+    }
+    setIsRunning(true);
+  }, [mounted, isCompleted, remainingTime]);
+
+  const reset = useCallback(() => {
+    setIsRunning(false);
+    setIsCompleted(false);
+    const duration = calculateInitialDuration();
+    initialDurationRef.current = duration;
+    setRemainingTime(duration);
+
+    // Restore initial enabled state
+    if (initialEnabledRef.current && duration > 0) {
+      setIsRunning(true);
+    }
+  }, [calculateInitialDuration]);
+
+  // Return static values during SSR
+  if (!mounted) {
+    const staticHours = padHours ? '00' : 0;
+    const staticMinutes = padMinutes ? '00' : 0;
+    const staticSeconds = padSeconds ? '00' : 0;
+
+    return {
+      year: 0,
+      month: 1,
+      day: 0,
+      week: 0,
+      isLeap: false,
+      hours: staticHours,
+      minutes: staticMinutes,
+      seconds: staticSeconds,
+      milliseconds: 0,
+      amPm: use24Hours ? undefined : 'AM',
+      isCompleted: false,
+      isRunning: false,
+      totalMilliseconds: 0,
+      start: () => {},
+      pause: () => {},
+      reset: () => {},
+      resume: () => {},
+    };
+  }
+
+  // Handle completed state
+  if (isCompleted || remainingTime <= 0) {
+    const staticHours = padHours ? '00' : 0;
+    const staticMinutes = padMinutes ? '00' : 0;
+    const staticSeconds = padSeconds ? '00' : 0;
+
     return {
       year: 0,
       month: 0,
       day: 0,
       week: 0,
       isLeap: false,
-      hours: padHours ? '00' : 0,
-      minutes: padMinutes ? '00' : 0,
-      seconds: padSeconds ? '00' : 0,
+      hours: staticHours,
+      minutes: staticMinutes,
+      seconds: staticSeconds,
       milliseconds: 0,
       amPm: use24Hours ? undefined : 'AM',
       isCompleted: true,
+      isRunning: false,
       totalMilliseconds: 0,
+      start: () => {},
+      pause,
+      reset,
+      resume: () => {},
     };
   }
 
-  // Calculate time components
+  // Calculate time components from remaining time
   const dur = dayjs.duration(remainingTime);
   const remainingYears = Math.floor(dur.asYears());
   const remainingMonths = Math.floor(dur.asMonths()) % 12;
@@ -240,6 +369,11 @@ export function useClockCountDown({
     milliseconds: remainingMilliseconds,
     amPm,
     isCompleted: false,
+    isRunning,
     totalMilliseconds: remainingTime,
+    start,
+    pause,
+    reset,
+    resume,
   };
 }

@@ -23,6 +23,12 @@ export const configurator: MantineDemo = {
   controls: [
     // Basic Settings
     {
+      type: 'boolean',
+      prop: 'running',
+      initialValue: true,
+      libraryValue: true,
+    },
+    {
       type: 'select',
       prop: 'secondHandBehavior',
       initialValue: 'tick',
