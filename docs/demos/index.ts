@@ -1,3 +1,4 @@
+export { classNames } from './Clock.demo.classNames';
 export { configurator } from './Clock.demo.configurator';
 export { hands } from './Clock.demo.hands';
 export { numbers } from './Clock.demo.numbers';

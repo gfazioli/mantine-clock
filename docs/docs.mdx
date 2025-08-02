@@ -453,6 +453,39 @@ The `Clock` component supports custom fonts for the numbers displayed on the clo
 
 <Demo data={demos.numberFonts} />
 
+## Styling with ClassNames
+
+The `Clock` component supports extensive customization through the `classNames` prop, allowing you to style every part of the clock using CSS modules or custom CSS classes. This approach gives you complete control over the clock's appearance.
+
+### Available ClassNames
+
+The `Clock` component exposes the following classNames for styling:
+
+- `root` - Root element of the clock component
+- `clockContainer` - Main clock container
+- `glassWrapper` - Glass wrapper with shadow effects
+- `clockFace` - Clock face containing all visual elements
+- `hourMarks` - Container for hour marks and numbers
+- `hourTick` - Hour tick marks (12 positions)
+- `minuteTick` - Minute tick marks (60 positions, excluding hour positions)
+- `number` - Base styles for hour numbers (1-12)
+- `primaryNumber` - Primary hour numbers (12, 3, 6, 9)
+- `secondaryNumber` - Secondary hour numbers (1, 2, 4, 5, 7, 8, 10, 11)
+- `hand` - Base styles for clock hands
+- `hourHand` - Hour hand specific styles
+- `minuteHand` - Minute hand specific styles
+- `secondHandContainer` - Container for second hand and counterweight
+- `secondHand` - Second hand specific styles
+- `secondHandCounterweight` - Second hand counterweight
+- `centerBlur` - Center blur effect
+- `centerDot` - Center dot at the pivot point
+
+### Neon Theme Example
+
+The following example demonstrates a complete custom theme using CSS modules with neon effects, animations, and modern styling techniques:
+
+<Demo data={demos.classNames} />
+
 ## Timezone Support
 
 The `Clock` component supports displaying time in different timezones around the world. Use the `timezone` prop to specify a timezone string, allowing you to create world clocks or display time for specific regions.
