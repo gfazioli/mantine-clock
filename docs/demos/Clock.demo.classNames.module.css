@@ -1,5 +1,6 @@
 .glassWrapper {
   background: radial-gradient(circle, #1a1a2e 0%, #0f3460 100%);
+  animation: neon-pulse 3s ease-in-out infinite;
 }
 
 .clockFace {
@@ -7,7 +8,7 @@
 }
 
 .hourTick {
-  background: linear-gradient(to bottom, #00d4ff, #0099cc);
+  background: linear-gradient(to bottom, #00d4ff, #09c);
   /* box-shadow: 0 0 5px rgba(0, 212, 255, 0.5); */
   width: 4px !important;
 }
@@ -37,7 +38,7 @@
 }
 
 .minuteHand {
-  background: linear-gradient(to top, #00d4ff, #0099cc) !important;
+  background: linear-gradient(to top, #00d4ff, #09c) !important;
   box-shadow: 0 0 8px rgba(0, 212, 255, 0.6);
   width: 4px !important;
 }
@@ -54,9 +55,9 @@
 }
 
 .centerDot {
-  background: radial-gradient(circle, #ffffff, #00d4ff) !important;
+  background: radial-gradient(circle, #fff, #00d4ff) !important;
   box-shadow: 0 0 15px rgba(0, 212, 255, 0.8);
-  border: 2px solid #ffffff;
+  border: 2px solid #fff;
 }
 
 .centerBlur {
@@ -64,20 +65,17 @@
 }
 
 /* Animation for a subtle pulsing effect */
-@keyframes neonPulse {
+@keyframes neon-pulse {
   0%,
   100% {
     box-shadow:
       0 0 20px rgba(0, 212, 255, 0.3),
       inset 0 0 20px rgba(0, 212, 255, 0.1);
   }
+
   50% {
     box-shadow:
       0 0 30px rgba(0, 212, 255, 0.5),
       inset 0 0 30px rgba(0, 212, 255, 0.2);
   }
-}
-
-.glassWrapper {
-  animation: neonPulse 3s ease-in-out infinite;
 }

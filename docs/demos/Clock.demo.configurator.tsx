@@ -40,7 +40,7 @@ export const configurator: MantineDemo = {
         { label: 'High-Frequency Sweep', value: 'tick-high-freq' },
       ],
     },
-    { type: 'size', prop: 'size', initialValue: 'sm', libraryValue: 'sm' },
+    { type: 'size', prop: 'size', initialValue: 'md', libraryValue: 'md' },
     {
       type: 'color',
       prop: 'color',

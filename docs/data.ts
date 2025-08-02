@@ -27,7 +27,7 @@ export interface PackageData {
 export const PACKAGE_DATA: PackageData = {
   packageName: '@gfazioli/mantine-clock',
   packageDescription:
-    'A Mantine component that allows you to create a clock effect with a list of elements.',
+    'React Clock components and hooks for Mantine with timezone support, countdown timers, customization options, and real-time updates.',
   mdxFileUrl: 'https://github.com/gfazioli/mantine-clock/blob/master/docs/docs.mdx',
   repositoryUrl: 'https://github.com/gfazioli/mantine-clock',
   licenseUrl: 'https://github.com/gfazioli/mantine-clock/blob/master/LICENSE',

@@ -233,9 +233,13 @@ const varsResolver = createVarsResolver<ClockFactory>(
       hourHandColor,
     }
   ) => {
-    const effectiveSize = Math.round(
-      px(getSize(defaultClockSizes[size] || size || defaultProps.size!, 'clock-size')) as number
-    );
+    const sizeValue = size || 'md';
+    const clockSize =
+      typeof sizeValue === 'string' && sizeValue in defaultClockSizes
+        ? defaultClockSizes[sizeValue as keyof typeof defaultClockSizes]
+        : sizeValue || defaultProps.size!;
+
+    const effectiveSize = Math.round(px(getSize(clockSize, 'clock-size')) as number);
 
     return {
       root: {
@@ -698,7 +702,14 @@ export const Clock = factory<ClockFactory>((_props, ref) => {
   });
 
   const effectiveSize = Math.round(
-    px(getSize(defaultClockSizes[size] || size || defaultProps.size!, 'clock-size')) as number
+    px(
+      getSize(
+        typeof size === 'string' && size in defaultClockSizes
+          ? defaultClockSizes[size as keyof typeof defaultClockSizes]
+          : size || defaultProps.size!,
+        'clock-size'
+      )
+    ) as number
   );
 
   useEffect(() => {

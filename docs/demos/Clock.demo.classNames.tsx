@@ -5,28 +5,37 @@ import classes from './Clock.demo.classNames.module.css';
 
 const code = `
 import { Clock } from '@gfazioli/mantine-clock';
+import { Stack, Text, Title } from '@mantine/core';
 import classes from './Clock.demo.classNames.module.css';
 
 function Demo() {
   return (
-    <Clock
-      classNames={{
-        root: classes.root,
-        clockContainer: classes.clockContainer,
-        glassWrapper: classes.glassWrapper,
-        clockFace: classes.clockFace,
-        hourTick: classes.hourTick,
-        minuteTick: classes.minuteTick,
-        primaryNumber: classes.primaryNumber,
-        secondaryNumber: classes.secondaryNumber,
-        hourHand: classes.hourHand,
-        minuteHand: classes.minuteHand,
-        secondHand: classes.secondHand,
-        secondHandCounterweight: classes.secondHandCounterweight,
-        centerDot: classes.centerDot,
-        centerBlur: classes.centerBlur,
-      }}
-    />
+    <Stack align="center" justify="center">
+      <Title order={4} ta="center" mb="xs">
+        Neon Cyber Clock Theme
+      </Title>
+      <Text size="sm" c="dimmed" ta="center" mb="md">
+        Custom styling using CSS modules and classNames prop
+      </Text>
+      <Clock
+        size={200}
+        secondHandBehavior="smooth"
+        classNames={{
+          glassWrapper: classes.glassWrapper,
+          clockFace: classes.clockFace,
+          hourTick: classes.hourTick,
+          minuteTick: classes.minuteTick,
+          primaryNumber: classes.primaryNumber,
+          secondaryNumber: classes.secondaryNumber,
+          hourHand: classes.hourHand,
+          minuteHand: classes.minuteHand,
+          secondHand: classes.secondHand,
+          secondHandCounterweight: classes.secondHandCounterweight,
+          centerDot: classes.centerDot,
+          centerBlur: classes.centerBlur,
+        }}
+      />
+    </Stack>
   );
 }
 `;
@@ -34,23 +43,9 @@ function Demo() {
 const cssCode = `
 /* Clock.demo.classNames.module.css */
 
-/* Custom clock styling with dark theme and neon effects */
-.root {
-  --clock-size: 300px;
-}
-
-.clockContainer {
-  background: radial-gradient(circle, #1a1a2e 0%, #0f3460 100%);
-  border: 3px solid #00d4ff;
-  box-shadow: 
-    0 0 20px rgba(0, 212, 255, 0.3),
-    inset 0 0 20px rgba(0, 212, 255, 0.1);
-  animation: neonPulse 3s ease-in-out infinite;
-}
-
 .glassWrapper {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
+  background: radial-gradient(circle, #1a1a2e 0%, #0f3460 100%);
+  animation: neon-pulse 3s ease-in-out infinite;
 }
 
 .clockFace {
@@ -59,7 +54,6 @@ const cssCode = `
 
 .hourTick {
   background: linear-gradient(to bottom, #00d4ff, #0099cc);
-  box-shadow: 0 0 5px rgba(0, 212, 255, 0.5);
   width: 4px !important;
 }
 
@@ -114,7 +108,7 @@ const cssCode = `
   background: radial-gradient(circle, rgba(255, 255, 255, 0.3), transparent) !important;
 }
 
-@keyframes neonPulse {
+@keyframes neon-pulse {
   0%, 100% { 
     box-shadow: 
       0 0 20px rgba(0, 212, 255, 0.3),
