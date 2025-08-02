@@ -1,6 +1,6 @@
 # Mantine Clock Component
 
-https://github.com/user-attachments/assets/285cdda3-cd62-46a3-b028-816c34217530
+https://github.com/user-attachments/assets/727a8634-28ee-4279-80b1-dcf2cb7f5961
 
 ---
 
