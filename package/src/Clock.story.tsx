@@ -178,9 +178,7 @@ type Story = StoryObj<typeof Clock>;
 
 // Basic Stories
 export const Default: Story = {
-  args: {
-    // color: '#f90',
-  },
+  args: {},
 };
 
 export const PrimaryNumbersOnly: Story = {
@@ -275,7 +273,7 @@ export const WorldClocks: Story = {
   render: () => (
     <Group>
       <Stack align="center">
-        <Clock timezone="America/New_York" size={200} />
+        <Clock size="sm" timezone="America/New_York" />
         <Text>New York</Text>
       </Stack>
       <Stack align="center">

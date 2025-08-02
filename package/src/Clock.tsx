@@ -8,9 +8,12 @@ import {
   createVarsResolver,
   Factory,
   factory,
+  getSize,
   GetStylesApi,
   MantineColor,
+  MantineSize,
   parseThemeColor,
+  px,
   StylesApiProps,
   Text,
   TextProps,
@@ -147,7 +150,7 @@ export interface ClockBaseProps {
   minuteHandLength?: number;
 
   /** Size of the clock in pixels (default: 400px) */
-  size?: number;
+  size?: MantineSize | number | (string & {});
 
   /** Thickness of the hour hand as a percentage of clock size (0.01 to 0.1) */
   hourHandSize?: number;
@@ -203,6 +206,14 @@ export const defaultProps: Partial<ClockProps> = {
   running: true,
 };
 
+const defaultClockSizes = {
+  xs: 100,
+  sm: 200,
+  md: 400,
+  lg: 480,
+  xl: 512,
+};
+
 const varsResolver = createVarsResolver<ClockFactory>(
   (
     theme,
@@ -222,7 +233,9 @@ const varsResolver = createVarsResolver<ClockFactory>(
       hourHandColor,
     }
   ) => {
-    const effectiveSize = Math.round(size || defaultProps.size!);
+    const effectiveSize = Math.round(
+      px(getSize(defaultClockSizes[size] || size || defaultProps.size!, 'clock-size')) as number
+    );
 
     return {
       root: {
@@ -684,7 +697,9 @@ export const Clock = factory<ClockFactory>((_props, ref) => {
     varsResolver,
   });
 
-  const effectiveSize = Math.round(size || defaultProps.size!);
+  const effectiveSize = Math.round(
+    px(getSize(defaultClockSizes[size] || size || defaultProps.size!, 'clock-size')) as number
+  );
 
   useEffect(() => {
     setHasMounted(true);
