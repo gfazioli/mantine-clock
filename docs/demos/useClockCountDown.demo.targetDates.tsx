@@ -16,10 +16,10 @@ function Demo() {
     padSeconds: true,
   });
 
-  // Summer vacation countdown (June 21, 2025)
-  const summer = useClockCountDown({
+  // Halloween countdown (October 31, 2025)
+  const halloween = useClockCountDown({
     enabled: false,
-    targetDate: '2025-06-21T00:00:00Z',
+    targetDate: '2025-10-31T00:00:00Z',
     timezone: 'Europe/Rome',
     padHours: true,
     padMinutes: true,
@@ -54,8 +54,8 @@ function Demo() {
     </Paper>
   );
 
-  const allStopped = !newYear.isRunning && !summer.isRunning;
-  const allCompleted = newYear.isCompleted && summer.isCompleted;
+  const allStopped = !newYear.isRunning && !halloween.isRunning;
+  const allCompleted = newYear.isCompleted && halloween.isCompleted;
 
   return (
     <Stack gap="md">
@@ -63,10 +63,10 @@ function Demo() {
         onClick={() => {
           if (allStopped) {
             newYear.start();
-            summer.start();
+            halloween.start();
           } else {
             newYear.pause();
-            summer.pause();
+            halloween.pause();
           }
         }}
         variant={allStopped ? 'outline' : 'filled'}
@@ -77,7 +77,7 @@ function Demo() {
       
       <Group gap="md" grow>
         <CountdownCard countdown={newYear} title="New Year 2026" emoji="🎊" />
-        <CountdownCard countdown={summer} title="Summer 2025" emoji="☀️" />
+        <CountdownCard countdown={halloween} title="Halloween 2025" emoji="🎃" />
       </Group>
     </Stack>
   );
@@ -95,10 +95,10 @@ function Demo() {
     padSeconds: true,
   });
 
-  // Summer vacation countdown (June 21, 2025)
-  const summer = useClockCountDown({
+  // Halloween countdown (October 31, 2025)
+  const halloween = useClockCountDown({
     enabled: false,
-    targetDate: '2025-06-21T00:00:00Z',
+    targetDate: '2025-10-31T00:00:00Z',
     timezone: 'Europe/Rome',
     padHours: true,
     padMinutes: true,
@@ -135,8 +135,8 @@ function Demo() {
     </Paper>
   );
 
-  const allStopped = !newYear.isRunning && !summer.isRunning;
-  const allCompleted = newYear.isCompleted && summer.isCompleted;
+  const allStopped = !newYear.isRunning && !halloween.isRunning;
+  const allCompleted = newYear.isCompleted && halloween.isCompleted;
 
   return (
     <Stack gap="md">
@@ -144,10 +144,10 @@ function Demo() {
         onClick={() => {
           if (allStopped) {
             newYear.start();
-            summer.start();
+            halloween.start();
           } else {
             newYear.pause();
-            summer.pause();
+            halloween.pause();
           }
         }}
         variant={allStopped ? 'outline' : 'filled'}
@@ -158,7 +158,7 @@ function Demo() {
 
       <Group gap="md" grow>
         <CountdownCard countdown={newYear} title="New Year 2026" emoji="🎊" />
-        <CountdownCard countdown={summer} title="Summer 2025" emoji="☀️" />
+        <CountdownCard countdown={halloween} title="Halloween 2025" emoji="🎃" />
       </Group>
     </Stack>
   );
