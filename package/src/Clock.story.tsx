@@ -525,7 +525,7 @@ export const TimeFormatsDemo: Story = {
           <Text size="sm" ta="center" fw={500}>
             "09:15"
             <br />
-            <Text size="xs" c="dimmed">
+            <Text size="xs" c="dimmed" span>
               Hours:Minutes
             </Text>
           </Text>
@@ -541,7 +541,7 @@ export const TimeFormatsDemo: Story = {
           <Text size="sm" ta="center" fw={500}>
             "16:42:33"
             <br />
-            <Text size="xs" c="dimmed">
+            <Text size="xs" c="dimmed" span>
               Hours:Minutes:Seconds
             </Text>
           </Text>
@@ -557,7 +557,7 @@ export const TimeFormatsDemo: Story = {
           <Text size="sm" ta="center" fw={500}>
             Date Object
             <br />
-            <Text size="xs" c="dimmed">
+            <Text size="xs" c="dimmed" span>
               new Date(...)
             </Text>
           </Text>
