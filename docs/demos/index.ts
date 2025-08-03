@@ -3,6 +3,7 @@ export { configurator } from './Clock.demo.configurator';
 export { hands } from './Clock.demo.hands';
 export { numbers } from './Clock.demo.numbers';
 export { numberFonts } from './Clock.demo.numbersFonts';
+export { reverseCountdown } from './Clock.demo.reverseCountdown';
 export { runningValue } from './Clock.demo.runningValue';
 export { staticValue } from './Clock.demo.staticValue';
 export { timezone } from './Clock.demo.timezone';
