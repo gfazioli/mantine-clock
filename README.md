@@ -75,7 +75,6 @@ function WorldClock() {
   return (
     <Clock 
       timezone="America/New_York"
-      showNumbers
       size={200}
       hourHandColor="blue"
       minuteHandColor="cyan"
@@ -154,13 +153,19 @@ import '@gfazioli/mantine-clock/styles.css';
 // or with CSS layers
 import '@gfazioli/mantine-clock/styles.layer.css';
 
-// Custom styled clock
+// Custom styled clock with available CSS variables
 function ThemedClock() {
   return (
     <Clock 
       style={{
-        '--clock-bg': 'var(--mantine-color-blue-1)',
-        '--clock-border': 'var(--mantine-color-blue-6)'
+        '--clock-color': 'var(--mantine-color-blue-1)',
+        '--clock-hour-ticks-color': 'var(--mantine-color-blue-6)',
+        '--clock-minute-ticks-color': 'var(--mantine-color-blue-4)',
+        '--clock-primary-numbers-color': 'var(--mantine-color-blue-9)',
+        '--clock-secondary-numbers-color': 'var(--mantine-color-blue-7)',
+        '--clock-hour-hand-color': 'var(--mantine-color-blue-8)',
+        '--clock-minute-hand-color': 'var(--mantine-color-blue-6)',
+        '--clock-second-hand-color': 'var(--mantine-color-red-6)'
       }}
       className="my-custom-clock"
     />
@@ -188,6 +193,19 @@ function WorldClockDashboard() {
         </div>
       ))}
     </div>
+  );
+}
+
+// Clock with custom number visibility and styling
+function CustomNumbersClock() {
+  return (
+    <Clock 
+      primaryNumbersOpacity={1}
+      secondaryNumbersOpacity={0.5}
+      primaryNumbersColor="blue"
+      secondaryNumbersColor="gray"
+      size={200}
+    />
   );
 }
 
