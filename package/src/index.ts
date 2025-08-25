@@ -1,5 +1,6 @@
 export { Clock } from './Clock';
 export type {
+  ClockArcsProps,
   ClockBaseProps,
   ClockCssVariables,
   ClockFactory,

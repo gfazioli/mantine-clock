@@ -68,6 +68,7 @@ export type ClockStylesNames =
   | 'number'
   | 'primaryNumber'
   | 'secondaryNumber'
+  | 'arcsLayer'
   | 'hand'
   | 'hourHand'
   | 'minuteHand'
@@ -88,6 +89,9 @@ export type ClockCssVariables = {
     | '--clock-second-hand-color'
     | '--clock-minute-hand-color'
     | '--clock-hour-hand-color'
+    | '--clock-seconds-arc-color'
+    | '--clock-minutes-arc-color'
+    | '--clock-hours-arc-color'
     | '--clock-primary-numbers-color'
     | '--clock-primary-numbers-opacity'
     | '--clock-secondary-numbers-color'
@@ -183,7 +187,46 @@ export interface ClockBaseProps {
   value?: string | Date | dayjs.Dayjs;
 }
 
-export interface ClockProps extends BoxProps, ClockBaseProps, StylesApiProps<ClockFactory> {}
+export interface ClockArcsProps {
+  /** Toggle seconds arc visibility (preferred) */
+  withSecondsArc?: boolean;
+  /** Start time for seconds arc (e.g., "12:00:00") */
+  secondsArcFrom?: string | Date;
+  /** Direction for seconds arc */
+  secondsArcDirection?: 'clockwise' | 'counterClockwise';
+  /** Color for seconds arc */
+  secondsArcColor?: MantineColor;
+  /** Opacity for seconds arc (0 = hidden, 1 = fully visible) */
+  secondsArcOpacity?: number;
+
+  /** Toggle minutes arc visibility (preferred) */
+  withMinutesArc?: boolean;
+  /** Start time for minutes arc (e.g., "12:00") */
+  minutesArcFrom?: string | Date;
+  /** Direction for minutes arc */
+  minutesArcDirection?: 'clockwise' | 'counterClockwise';
+  /** Color for minutes arc */
+  minutesArcColor?: MantineColor;
+  /** Opacity for minutes arc (0 = hidden, 1 = fully visible) */
+  minutesArcOpacity?: number;
+
+  /** Toggle hours arc visibility (preferred) */
+  withHoursArc?: boolean;
+  /** Start time for hours arc (e.g., "12:00") */
+  hoursArcFrom?: string | Date;
+  /** Direction for hours arc */
+  hoursArcDirection?: 'clockwise' | 'counterClockwise';
+  /** Color for hours arc */
+  hoursArcColor?: MantineColor;
+  /** Opacity for hours arc (0 = hidden, 1 = fully visible) */
+  hoursArcOpacity?: number;
+}
+
+export interface ClockProps
+  extends BoxProps,
+    ClockBaseProps,
+    ClockArcsProps,
+    StylesApiProps<ClockFactory> {}
 
 export type ClockFactory = Factory<{
   props: ClockProps;
@@ -231,6 +274,9 @@ const varsResolver = createVarsResolver<ClockFactory>(
       secondHandColor,
       minuteHandColor,
       hourHandColor,
+      secondsArcColor,
+      minutesArcColor,
+      hoursArcColor,
     }
   ) => {
     const sizeValue = size || 'md';
@@ -287,6 +333,18 @@ const varsResolver = createVarsResolver<ClockFactory>(
           color: hourHandColor || '',
           theme,
         }).value,
+        '--clock-seconds-arc-color': parseThemeColor({
+          color: secondsArcColor || secondHandColor || '',
+          theme,
+        }).value,
+        '--clock-minutes-arc-color': parseThemeColor({
+          color: minutesArcColor || minuteHandColor || '',
+          theme,
+        }).value,
+        '--clock-hours-arc-color': parseThemeColor({
+          color: hoursArcColor || hourHandColor || '',
+          theme,
+        }).value,
       },
     };
   }
@@ -333,7 +391,7 @@ const parseTimeValue = (value: string | Date | dayjs.Dayjs | undefined): Date | 
   return null;
 };
 
-interface RealClockProps extends ClockBaseProps {
+interface RealClockProps extends ClockBaseProps, ClockArcsProps {
   time: Date;
   getStyles: GetStylesApi<ClockFactory>;
   effectiveSize: number;
@@ -365,6 +423,18 @@ const RealClock: React.FC<RealClockProps> = (props) => {
     hourNumbersDistance = 0.75, // Default distance for hour numbers
     primaryNumbersProps,
     secondaryNumbersProps,
+    withSecondsArc,
+    secondsArcFrom,
+    secondsArcDirection = 'clockwise',
+    withMinutesArc,
+    minutesArcFrom,
+    minutesArcDirection = 'clockwise',
+    withHoursArc,
+    hoursArcFrom,
+    hoursArcDirection = 'clockwise',
+    secondsArcOpacity,
+    minutesArcOpacity,
+    hoursArcOpacity,
   } = props;
 
   // Use dayjs to handle timezone conversion
@@ -415,12 +485,141 @@ const RealClock: React.FC<RealClockProps> = (props) => {
   const centerSize = Math.round(size * 0.034); // Center dot size
   const tickOffset = Math.round(size * 0.028); // Distance from edge for ticks
 
+  // Helpers to compute angles and SVG path for sectors
+  const toClockAngle = (deg: number) => ((deg % 360) + 360) % 360; // normalize
+
+  const secAngleFromDate = (d: Date | null | undefined) => {
+    if (!d) {
+      return 0;
+    }
+    const dt = timezone && timezone !== '' ? dayjs(d).tz(timezone) : dayjs(d);
+    const s = dt.second();
+    const ms = dt.millisecond();
+    return toClockAngle((s + ms / 1000) * 6);
+  };
+
+  const minAngleFromDate = (d: Date | null | undefined) => {
+    if (!d) {
+      return 0;
+    }
+    const dt = timezone && timezone !== '' ? dayjs(d).tz(timezone) : dayjs(d);
+    const m = dt.minute();
+    return toClockAngle(m * 6);
+  };
+
+  const hourAngleFromDate = (d: Date | null | undefined) => {
+    if (!d) {
+      return 0;
+    }
+    const dt = timezone && timezone !== '' ? dayjs(d).tz(timezone) : dayjs(d);
+    const h = dt.hour() % 12;
+    const m = dt.minute();
+    return toClockAngle(h * 30 + m * 0.5);
+  };
+
+  const describeSector = (
+    cx: number,
+    cy: number,
+    r: number,
+    startDeg: number,
+    endDeg: number,
+    direction: 'clockwise' | 'counterClockwise'
+  ) => {
+    const start = toClockAngle(startDeg);
+    const end = toClockAngle(endDeg);
+
+    // Compute sweep and large-arc-flag based on direction
+    let delta = 0;
+    if (direction === 'clockwise') {
+      delta = end - start;
+      if (delta < 0) {
+        delta += 360;
+      }
+    } else {
+      delta = start - end;
+      if (delta < 0) {
+        delta += 360;
+      }
+    }
+    // Use >= to avoid flipping around 180deg due to floating point noise
+    const largeArc = delta >= 180 ? 1 : 0;
+    const sweep = direction === 'clockwise' ? 1 : 0;
+
+    const aStart = (start * Math.PI) / 180;
+    const aEnd = (end * Math.PI) / 180;
+    // Avoid rounding to integers to prevent jitter; keep subpixel precision
+    const x1 = cx + r * Math.sin(aStart);
+    const y1 = cy - r * Math.cos(aStart);
+    const x2 = cx + r * Math.sin(aEnd);
+    const y2 = cy - r * Math.cos(aEnd);
+
+    // Format numbers to a reasonable precision to keep DOM diffs small
+    const fmt = (n: number) => (Number.isFinite(n) ? n.toFixed(3) : '0');
+
+    // Build sector path: center -> start point -> arc -> center
+    return `M ${fmt(cx)} ${fmt(cy)} L ${fmt(x1)} ${fmt(y1)} A ${fmt(r)} ${fmt(r)} 0 ${largeArc} ${sweep} ${fmt(x2)} ${fmt(y2)} Z`;
+  };
+
+  const showSecArc = withSecondsArc === true && (secondsArcOpacity ?? 1) !== 0;
+  const showMinArc = withMinutesArc === true && (minutesArcOpacity ?? 1) !== 0;
+  const showHrArc = withHoursArc === true && (hoursArcOpacity ?? 1) !== 0;
+
   return (
     <Box {...getStyles('clockContainer')}>
       {/* Glass wrapper with shadow */}
       <Box {...getStyles('glassWrapper')}>
         {/* Clock face */}
         <Box {...getStyles('clockFace')}>
+          {/* Arcs layer (rendered above face, below hands) */}
+          {(showSecArc || showMinArc || showHrArc) && (
+            <svg
+              {...getStyles('arcsLayer', { style: { width: size, height: size } })}
+              viewBox={`0 0 ${size} ${size}`}
+            >
+              {showHrArc && (
+                <path
+                  d={describeSector(
+                    clockRadius,
+                    clockRadius,
+                    calculatedHourHandLength,
+                    hourAngleFromDate(parseTimeValue(hoursArcFrom) ?? null),
+                    hourAngle,
+                    hoursArcDirection
+                  )}
+                  fill="var(--clock-hours-arc-color-resolved)"
+                  fillOpacity={Math.round((hoursArcOpacity ?? 1) * 100) / 100}
+                />
+              )}
+              {showMinArc && (
+                <path
+                  d={describeSector(
+                    clockRadius,
+                    clockRadius,
+                    calculatedMinuteHandLength,
+                    minAngleFromDate(parseTimeValue(minutesArcFrom) ?? null),
+                    minuteAngle,
+                    minutesArcDirection
+                  )}
+                  fill="var(--clock-minutes-arc-color-resolved)"
+                  fillOpacity={Math.round((minutesArcOpacity ?? 1) * 100) / 100}
+                />
+              )}
+              {showSecArc && (
+                <path
+                  d={describeSector(
+                    clockRadius,
+                    clockRadius,
+                    calculatedSecondHandLength,
+                    secAngleFromDate(parseTimeValue(secondsArcFrom) ?? null),
+                    secondAngle,
+                    secondsArcDirection
+                  )}
+                  fill="var(--clock-seconds-arc-color-resolved)"
+                  fillOpacity={Math.round((secondsArcOpacity ?? 1) * 100) / 100}
+                />
+              )}
+            </svg>
+          )}
           {/* Hour marks container */}
           <Box {...getStyles('hourMarks')}>
             {/* Hour ticks */}
@@ -678,6 +877,21 @@ export const Clock = factory<ClockFactory>((_props, ref) => {
     timezone,
     running,
     value,
+    withSecondsArc,
+    secondsArcFrom,
+    secondsArcDirection,
+    secondsArcColor,
+    secondsArcOpacity,
+    withMinutesArc,
+    minutesArcFrom,
+    minutesArcDirection,
+    minutesArcColor,
+    minutesArcOpacity,
+    withHoursArc,
+    hoursArcFrom,
+    hoursArcDirection,
+    hoursArcColor,
+    hoursArcOpacity,
     // Styles API props
     classNames,
     style,

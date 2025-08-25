@@ -453,6 +453,46 @@ The `Clock` component supports custom fonts for the numbers displayed on the clo
 
 <Demo data={demos.numberFonts} />
 
+## Arcs aligned to hands
+
+The `Clock` component can render sector arcs aligned with the current positions of seconds, minutes, and hours hands. Each arc:
+
+- Starts from a reference time (`secondsArcFrom`, `minutesArcFrom`, `hoursArcFrom`)
+- Ends at the current hand position
+- Supports direction: `clockwise` or `counterClockwise`
+- Has independent color and opacity
+- Uses the corresponding hand length for its radius, so arcs never exceed the hand
+
+Enable with the following props:
+
+- `withSecondsArc`, `secondsArcFrom`, `secondsArcDirection`, `secondsArcColor`, `secondsArcOpacity`
+- `withMinutesArc`, `minutesArcFrom`, `minutesArcDirection`, `minutesArcColor`, `minutesArcOpacity`
+- `withHoursArc`, `hoursArcFrom`, `hoursArcDirection`, `hoursArcColor`, `hoursArcOpacity`
+
+<Demo data={demos.arcs} />
+
+> **Note**: — Arc start props: precision and accepted formats
+>
+> - secondsArcFrom
+>   - Precision: seconds.
+>   - Accepted: string "HH:mm:ss" or Date.
+>   - Parsing: only the seconds field determines the start on the seconds dial (0–59). Hours and minutes in the string are ignored for this arc. With Date, the start second is taken from the Date in the clock timezone.
+>   - Examples: "12:00:45" -> 45s mark; new Date('2025-08-26T10:00:30Z') -> 30s mark (in the component timezone).
+> - minutesArcFrom
+>   - Precision: minutes with optional fractional part from seconds.
+>   - Accepted: string "HH:mm" or "HH:mm:ss", or Date.
+>   - Parsing: start minute = mm + (ss/60 when seconds present). Hours are ignored. With Date, start minute = minutes + seconds/60 in the clock timezone.
+>   - Examples: "12:07" -> 7-minute mark; "12:07:30" -> 7.5-minute mark.
+> - hoursArcFrom
+>   - Precision: hour-hand position on a 12-hour dial with fractional offset from minutes (and seconds if provided).
+>   - Accepted: string "HH:mm" or "HH:mm:ss", or Date.
+>   - Parsing: start hour = (HH % 12) + (mm/60) + (ss/3600). With Date, values are read in the clock timezone.
+>   - Examples: "12:10" -> slightly past 12 (10 minutes shifts the start by 10/60 of the hour); "3:30" -> halfway between 3 and 4; "15:00" -> same as "3:00".
+> - Timezone
+>   - Date inputs are interpreted in the component’s timezone (timezone prop). Time strings are treated as literal time-of-day fields according to the rules above (not absolute timestamps).
+> - Validation
+>   - Ranges: HH 0–23 (wrapped to 12h), mm 0–59, ss 0–59. Invalid strings are ignored—use strict formats with optional leading zeros.
+
 ## Styling with ClassNames
 
 The `Clock` component supports extensive customization through the `classNames` prop, allowing you to style every part of the clock using CSS modules or custom CSS classes. This approach gives you complete control over the clock's appearance.

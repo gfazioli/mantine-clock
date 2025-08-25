@@ -33,9 +33,9 @@
     "type-fest": "^4.41.0"
   },
   "devDependencies": {
-    "@types/node": "^22.17.2",
+    "@types/node": "^22.18.0",
     "@types/react": "^19.1.11",
-    "@types/react-dom": "^19.1.7",
+    "@types/react-dom": "^19.1.8",
     "typescript": "5.9.2"
   }
 }

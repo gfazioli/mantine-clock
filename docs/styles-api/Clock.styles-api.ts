@@ -7,6 +7,7 @@ export const ClockStylesApi: StylesApiData<ClockFactory> = {
     clockContainer: 'Main clock container',
     glassWrapper: 'Glass wrapper with shadow effects',
     clockFace: 'Clock face containing all visual elements',
+    arcsLayer: 'SVG arcs layer rendered above the face and below the hands',
     hourMarks: 'Container for hour marks and numbers',
     hourTick: 'Hour tick marks (12 positions)',
     minuteTick: 'Minute tick marks (60 positions, excluding hour positions)',
@@ -39,6 +40,9 @@ export const ClockStylesApi: StylesApiData<ClockFactory> = {
       '--clock-second-hand-color': 'Color of the second hand',
       '--clock-minute-hand-color': 'Color of the minute hand',
       '--clock-hour-hand-color': 'Color of the hour hand',
+      '--clock-seconds-arc-color': 'Fill color of the seconds arc (sector)',
+      '--clock-minutes-arc-color': 'Fill color of the minutes arc (sector)',
+      '--clock-hours-arc-color': 'Fill color of the hours arc (sector)',
     },
   },
 

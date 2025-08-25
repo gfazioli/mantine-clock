@@ -42,6 +42,23 @@ const meta: Meta<typeof Clock> = {
     hourHandOpacity: 1,
     hourHandSize: 0.017,
     hourHandLength: 0.4,
+
+    // Arcs default (off)
+    withSecondsArc: false,
+    secondsArcFrom: undefined,
+    secondsArcDirection: 'clockwise',
+    secondsArcColor: undefined,
+    secondsArcOpacity: 1,
+    withMinutesArc: false,
+    minutesArcFrom: undefined,
+    minutesArcDirection: 'clockwise',
+    minutesArcColor: undefined,
+    minutesArcOpacity: 1,
+    withHoursArc: false,
+    hoursArcFrom: undefined,
+    hoursArcDirection: 'clockwise',
+    hoursArcColor: undefined,
+    hoursArcOpacity: 1,
   },
   argTypes: {
     timezone: {
@@ -169,6 +186,70 @@ const meta: Meta<typeof Clock> = {
       control: { type: 'range', min: 0.5, max: 0.95, step: 0.01 },
       description:
         'Distance of the hour numbers from the center as a percentage of the radius (0.5 = 50%, 0.83 = default)',
+    },
+    // Arcs controls
+    withSecondsArc: {
+      control: { type: 'boolean' },
+      description: 'Toggle seconds arc visibility',
+    },
+    secondsArcOpacity: {
+      control: { type: 'range', min: 0, max: 1, step: 0.01 },
+      description: 'Opacity for the seconds arc (0 = hidden, 1 = fully visible)',
+    },
+    secondsArcFrom: {
+      control: { type: 'text' },
+      description: 'Start time for seconds arc (e.g., "12:00:00")',
+    },
+    secondsArcDirection: {
+      control: { type: 'inline-radio' },
+      options: ['clockwise', 'counterClockwise'],
+      description: 'Direction for seconds arc',
+    },
+    secondsArcColor: {
+      control: { type: 'color' },
+      description: 'Color for seconds arc (MantineColor)',
+    },
+    withMinutesArc: {
+      control: { type: 'boolean' },
+      description: 'Toggle minutes arc visibility',
+    },
+    minutesArcOpacity: {
+      control: { type: 'range', min: 0, max: 1, step: 0.01 },
+      description: 'Opacity for the minutes arc (0 = hidden, 1 = fully visible)',
+    },
+    minutesArcFrom: {
+      control: { type: 'text' },
+      description: 'Start time for minutes arc (e.g., "12:00")',
+    },
+    minutesArcDirection: {
+      control: { type: 'inline-radio' },
+      options: ['clockwise', 'counterClockwise'],
+      description: 'Direction for minutes arc',
+    },
+    minutesArcColor: {
+      control: { type: 'color' },
+      description: 'Color for minutes arc (MantineColor)',
+    },
+    withHoursArc: {
+      control: { type: 'boolean' },
+      description: 'Toggle hours arc visibility',
+    },
+    hoursArcOpacity: {
+      control: { type: 'range', min: 0, max: 1, step: 0.01 },
+      description: 'Opacity for the hours arc (0 = hidden, 1 = fully visible)',
+    },
+    hoursArcFrom: {
+      control: { type: 'text' },
+      description: 'Start time for hours arc (e.g., "12:00")',
+    },
+    hoursArcDirection: {
+      control: { type: 'inline-radio' },
+      options: ['clockwise', 'counterClockwise'],
+      description: 'Direction for hours arc',
+    },
+    hoursArcColor: {
+      control: { type: 'color' },
+      description: 'Color for hours arc (MantineColor)',
     },
   },
 };
@@ -396,6 +477,54 @@ export const StaticTimeString: Story = {
         story: 'A static clock showing a specific time using a string format "15:30:45".',
       },
     },
+  },
+};
+
+// Arcs stories
+export const SecondsArcLive: Story = {
+  args: {
+    withSecondsArc: true,
+    secondsArcFrom: '12:00:00',
+    secondsArcDirection: 'clockwise',
+    secondsArcColor: 'red.6',
+    secondsArcOpacity: 0.6,
+  },
+};
+
+export const MinutesArcFromNoon: Story = {
+  args: {
+    withMinutesArc: true,
+    minutesArcFrom: '12:00',
+    minutesArcDirection: 'clockwise',
+    minutesArcColor: 'blue.6',
+    minutesArcOpacity: 0.5,
+  },
+};
+
+export const HoursArcCounterClockwise: Story = {
+  args: {
+    withHoursArc: true,
+    hoursArcFrom: '12:00',
+    hoursArcDirection: 'counterClockwise',
+    hoursArcColor: 'teal.6',
+    hoursArcOpacity: 0.4,
+  },
+};
+
+export const AllArcs: Story = {
+  args: {
+    withSecondsArc: true,
+    secondsArcFrom: '12:00:00',
+    secondsArcColor: 'red.6',
+    secondsArcOpacity: 0.6,
+    withMinutesArc: true,
+    minutesArcFrom: '12:00',
+    minutesArcColor: 'blue.6',
+    minutesArcOpacity: 0.5,
+    withHoursArc: true,
+    hoursArcFrom: '12:00',
+    hoursArcColor: 'teal.6',
+    hoursArcOpacity: 0.4,
   },
 };
 
