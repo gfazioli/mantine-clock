@@ -429,12 +429,6 @@ The `Clock` component can display a static time using the `value` prop. When `ru
 
 <Demo data={demos.staticValue} />
 
-## Reverse Countdown Clock
-
-This demo showcases how to create a reverse countdown clock by combining the `Clock` component with the `useClockCountDown` hook. The clock displays the remaining time visually as it counts down, creating a unique reverse clock effect. The clock hands move backwards as time decreases, and the appearance changes when the countdown is completed.
-
-<Demo data={demos.reverseCountdown} />
-
 ## Running Clock with Initial Value
 
 You can also set an initial time value for a running clock. The clock will start from the specified time and continue running in real time.
@@ -564,6 +558,19 @@ The hook returns an object with the following properties:
 
 <PropsTable component="useClockReturns" query="" data={hooksData} />
 
+#### Use case with Clock component
+
+While `useClock` reports the current time, you can still build a "start from a specific time" experience by treating the hook as a ticker and managing the displayed time in local state.
+
+This demo lets you pick hours, minutes, and seconds, then control the flow with Start, Pause, Resume and Reset. The `Clock` component receives the formatted `HH:MM:SS` value from state, while `useClock` provides a 1-second heartbeat and control methods.
+
+Key ideas:
+- `useClock({ enabled: false, updateFrequency: 1000 })` acts as a metronome when running.
+- Inputs set the displayed time while paused; during run, state advances every tick.
+- Reset returns the display to the selected inputs.
+
+<Demo data={demos.useClockSpecificTime} />
+
 ### useClockCountDown Hook
 
 The `useClockCountDown` hook provides real-time countdown functionality with support for target dates, duration-based countdowns, and completion callbacks. Perfect for creating countdown timers, event countdowns, or deadline trackers.
@@ -589,3 +596,9 @@ The hook returns an object with the following properties:
   query=""
   data={hooksData}
 />
+
+#### Use case with Clock component
+
+This demo showcases how to create a reverse countdown clock by combining the `Clock` component with the `useClockCountDown` hook. The clock displays the remaining time visually as it counts down, creating a unique reverse clock effect. The clock hands move backwards as time decreases, and the appearance changes when the countdown is completed.
+
+<Demo data={demos.reverseCountdown} />

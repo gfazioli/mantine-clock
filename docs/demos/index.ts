@@ -12,6 +12,7 @@ export { basic, shortCountdown, specificDate } from './ClockCountDown.demo.basic
 
 // useClock hook demos
 export { basic as useClockBasic } from './useClock.demo.basic';
+export { specificTime as useClockSpecificTime } from './useClock.demo.specificTime';
 export { worldClocks as useClockWorldClocks } from './useClock.demo.worldClocks';
 
 // useClockCountDown hook demos
