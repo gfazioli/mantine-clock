@@ -164,7 +164,9 @@ function Demo() {
 
   // Advance the displayed time by one second on each tick while running
   useEffect(() => {
-    if (!clock.isRunning) return;
+    if (!clock.isRunning) {
+      return;
+    }
     setDSeconds((prev) => {
       let s = prev + 1;
       let m = dMinutes;
@@ -181,7 +183,6 @@ function Demo() {
       setDHours(h);
       return s;
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clock.seconds]);
 
   const pad = (n: number) => n.toString().padStart(2, '0');

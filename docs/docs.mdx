@@ -565,6 +565,7 @@ While `useClock` reports the current time, you can still build a "start from a s
 This demo lets you pick hours, minutes, and seconds, then control the flow with Start, Pause, Resume and Reset. The `Clock` component receives the formatted `HH:MM:SS` value from state, while `useClock` provides a 1-second heartbeat and control methods.
 
 Key ideas:
+
 - `useClock({ enabled: false, updateFrequency: 1000 })` acts as a metronome when running.
 - Inputs set the displayed time while paused; during run, state advances every tick.
 - Reset returns the display to the selected inputs.
