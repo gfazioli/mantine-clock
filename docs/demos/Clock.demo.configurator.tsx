@@ -45,14 +45,14 @@ export const configurator: MantineDemo = {
       type: 'color',
       prop: 'color',
       initialValue: '',
-      libraryValue: undefined,
+      libraryValue: '',
     },
     // Ticks Settings
     {
       type: 'color',
       prop: 'hourTicksColor',
-      initialValue: 'dark',
-      libraryValue: 'dark',
+      initialValue: '',
+      libraryValue: '',
     },
     {
       type: 'number',
@@ -66,8 +66,8 @@ export const configurator: MantineDemo = {
     {
       type: 'color',
       prop: 'minuteTicksColor',
-      initialValue: 'gray',
-      libraryValue: 'gray',
+      initialValue: '',
+      libraryValue: '',
     },
     {
       type: 'number',

@@ -26,7 +26,7 @@ export const hands: MantineDemo = {
       type: 'color',
       prop: 'secondHandColor',
       initialValue: '',
-      libraryValue: undefined,
+      libraryValue: '',
     },
     {
       type: 'number',
@@ -61,7 +61,7 @@ export const hands: MantineDemo = {
       type: 'color',
       prop: 'minuteHandColor',
       initialValue: '',
-      libraryValue: undefined,
+      libraryValue: '',
     },
     {
       type: 'number',
@@ -96,7 +96,7 @@ export const hands: MantineDemo = {
       type: 'color',
       prop: 'hourHandColor',
       initialValue: '',
-      libraryValue: undefined,
+      libraryValue: '',
     },
     {
       type: 'number',

@@ -47,7 +47,7 @@ export const arcs: MantineDemo = {
         { label: 'Counter', value: 'counterClockwise' },
       ],
     },
-    { type: 'color', prop: 'secondsArcColor', initialValue: 'red.6', libraryValue: undefined },
+    { type: 'color', prop: 'secondsArcColor', initialValue: 'red.6', libraryValue: '' },
     {
       type: 'number',
       prop: 'secondsArcOpacity',
@@ -79,7 +79,7 @@ export const arcs: MantineDemo = {
         { label: 'Counter', value: 'counterClockwise' },
       ],
     },
-    { type: 'color', prop: 'minutesArcColor', initialValue: 'blue.6', libraryValue: undefined },
+    { type: 'color', prop: 'minutesArcColor', initialValue: 'blue.6', libraryValue: '' },
     {
       type: 'number',
       prop: 'minutesArcOpacity',

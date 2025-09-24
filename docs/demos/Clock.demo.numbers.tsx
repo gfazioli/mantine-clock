@@ -37,7 +37,7 @@ export const numbers: MantineDemo = {
       type: 'color',
       prop: 'primaryNumbersColor',
       initialValue: '',
-      libraryValue: undefined,
+      libraryValue: '',
     },
     {
       type: 'number',
@@ -53,7 +53,7 @@ export const numbers: MantineDemo = {
       type: 'color',
       prop: 'secondaryNumbersColor',
       initialValue: '',
-      libraryValue: undefined,
+      libraryValue: '',
     },
     {
       type: 'number',
