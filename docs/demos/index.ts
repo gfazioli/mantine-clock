@@ -7,6 +7,7 @@ export { numberFonts } from './Clock.demo.numbersFonts';
 export { reverseCountdown } from './Clock.demo.reverseCountdown';
 export { runningValue } from './Clock.demo.runningValue';
 export { staticValue } from './Clock.demo.staticValue';
+export { stylesApi } from './Clock.demo.stylesApi';
 export { timezone } from './Clock.demo.timezone';
 export { worldClocks } from './Clock.demo.worldClocks';
 export { basic, shortCountdown, specificDate } from './ClockCountDown.demo.basic';
