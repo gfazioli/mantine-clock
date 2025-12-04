@@ -1,8 +1,6 @@
 # Mantine Clock Component
 
-https://github.com/user-attachments/assets/727a8634-28ee-4279-80b1-dcf2cb7f5961
-
----
+<img width="2752" height="1536" alt="Gemini_Generated_Image_kbold4kbold4kbol" src="https://github.com/user-attachments/assets/bf9e9aeb-6fc2-4dfd-9c5a-7e4aa26cde45" />
 
 <div align="center">
   
@@ -244,3 +242,5 @@ function ControllableCountdown() {
 [![Star History Chart](https://api.star-history.com/svg?repos=gfazioli/mantine-clock&type=Timeline)](https://www.star-history.com/#gfazioli/mantine-clock&Timeline)
 
 </div>
+
+https://github.com/user-attachments/assets/727a8634-28ee-4279-80b1-dcf2cb7f5961
