@@ -1,7 +1,6 @@
 # Mantine Clock Component
 
-<img width="1024" height="572" alt="Mantine Clock" src="https://github.com/user-attachments/assets/611c16ec-bdc3-4ad8-881a-b878833399d4" />
-
+<img width="2752" height="1536" alt="Mantine Clock" src="https://github.com/user-attachments/assets/cd3b67d5-2bbd-4963-9f8f-77324dd81843" />
 
 <div align="center">
   
