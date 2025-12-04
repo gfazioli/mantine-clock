@@ -1,6 +1,7 @@
 # Mantine Clock Component
 
-<img width="2752" height="1536" alt="Gemini_Generated_Image_kbold4kbold4kbol" src="https://github.com/user-attachments/assets/bf9e9aeb-6fc2-4dfd-9c5a-7e4aa26cde45" />
+<img width="1024" height="572" alt="Mantine Clock" src="https://github.com/user-attachments/assets/611c16ec-bdc3-4ad8-881a-b878833399d4" />
+
 
 <div align="center">
   
