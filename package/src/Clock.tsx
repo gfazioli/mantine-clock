@@ -223,10 +223,7 @@ export interface ClockArcsProps {
 }
 
 export interface ClockProps
-  extends BoxProps,
-    ClockBaseProps,
-    ClockArcsProps,
-    StylesApiProps<ClockFactory> {}
+  extends BoxProps, ClockBaseProps, ClockArcsProps, StylesApiProps<ClockFactory> {}
 
 export type ClockFactory = Factory<{
   props: ClockProps;
