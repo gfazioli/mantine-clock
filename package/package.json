@@ -1,6 +1,6 @@
 {
   "name": "@gfazioli/mantine-clock",
-  "version": "2.1.9",
+  "version": "2.1.10",
   "description": "React Clock components and hooks for Mantine with timezone support, countdown timers, customization options, and real-time updates.",
   "homepage": "https://gfazioli.github.io/mantine-clock/",
   "packageManager": "yarn@4.0.1",
