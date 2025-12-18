@@ -15,19 +15,13 @@
 
 This component is created on top of the [Mantine](https://mantine.dev/) library.
 
-[![Mantine UI Library](https://img.shields.io/badge/-MANTINE_UI_LIBRARY-blue?style=for-the-badge&labelColor=black&logo=mantine
-)](https://mantine.dev/)
+[Mantine Clock](https://gfazioli.github.io/mantine-clock/) delivers both an analog Clock component and time-management hooks tailored for React applications. 
 
-It provides the capability to generate a dynamic clock effect, enabling the display of a wide variety of content in a visually engaging manner. This effect can enhance the overall user experience by drawing attention to important information, announcements, or promotions, allowing for a more interactive and captivating presentation.
+The Clock supports live ticking or static display via a value prop, multiple second-hand behaviors (smooth, tick, half‑tick), and rich styling through classNames and the Styles API—including control over ticks, numbers, hands, center dot, and themed appearances like a “Neon Cyber Clock.” It further enables visual sector arcs that dynamically align to current seconds, minutes, and hours hand positions, with precise start rules, direction, colors, and opacity.
 
-[![Mantine Extensions](https://img.shields.io/badge/-Watch_the_Video-blue?style=for-the-badge&labelColor=black&logo=youtube
-)](https://www.youtube.com/playlist?list=PL85tTROKkZrWyqCcmNCdWajpx05-cTal4)
-[![Demo and Documentation](https://img.shields.io/badge/-Demo_%26_Documentation-blue?style=for-the-badge&labelColor=black&logo=typescript
-)](https://gfazioli.github.io/mantine-clock/)
-[![Mantine Extensions HUB](https://img.shields.io/badge/-Mantine_Extensions_Hub-blue?style=for-the-badge&labelColor=blue
-)](https://mantine-extensions.vercel.app/)
-
-👉 You can find more components on the [Mantine Extensions Hub](https://mantine-extensions.vercel.app/) library.
+> [!note]
+>
+> → [Demo and Documentation](https://gfazioli.github.io/mantine-clock/) → [Youtube Video](https://www.youtube.com/playlist?list=PL85tTROKkZrWyqCcmNCdWajpx05-cTal4) → [More Mantine Components](https://mantine-extensions.vercel.app/)
 
 
 ## Installation
@@ -237,10 +231,12 @@ function ControllableCountdown() {
 - **Responsive Design**: Adapts to different screen sizes automatically
 
 
-<div align="center">
+---
   
+https://github.com/user-attachments/assets/727a8634-28ee-4279-80b1-dcf2cb7f5961
+
+---
+
 [![Star History Chart](https://api.star-history.com/svg?repos=gfazioli/mantine-clock&type=Timeline)](https://www.star-history.com/#gfazioli/mantine-clock&Timeline)
 
-</div>
 
-https://github.com/user-attachments/assets/727a8634-28ee-4279-80b1-dcf2cb7f5961
