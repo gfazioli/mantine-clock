@@ -1,6 +1,6 @@
 # Mantine Clock Component
 
-<img alt="Mantine Clock" src="https://github.com/gfazioli/mantine-clock/blob/master/logo.png" />
+<img alt="Mantine Clock" src="https://github.com/gfazioli/mantine-clock/blob/master/logo.jpeg" />
 
 <div align="center">
   
