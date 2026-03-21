@@ -6,6 +6,7 @@ export type {
   ClockFactory,
   ClockProps,
   ClockStylesNames,
+  Timezone,
 } from './Clock';
 
 export { useClock } from './hooks/use-clock';

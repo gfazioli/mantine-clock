@@ -3,7 +3,7 @@ import { Group, Paper, Stack, Text, Title } from '@mantine/core';
 import { MantineDemo } from '@mantinex/demo';
 
 const code = `
-import { useClockCountDown } from '@mantine/clock';
+import { useClockCountDown } from '@gfazioli/mantine-clock';
 
 function Demo() {
   const countdown = useClockCountDown({
@@ -21,7 +21,7 @@ function Demo() {
       <Title order={4} mb="xs">Countdown Timer</Title>
       <Group gap="xs">
         <Text fw={700} c={countdown.isCompleted ? 'red' : undefined}>
-          {countdown.hours}:{countdown.minutes}:{countdown.seconds}
+          {countdown.formattedHours}:{countdown.formattedMinutes}:{countdown.formattedSeconds}
         </Text>
       </Group>
       <Text size="sm" c="dimmed" mt="xs">
@@ -53,7 +53,7 @@ function Demo() {
       </Title>
       <Group gap="xs">
         <Text fw={700} c={countdown.isCompleted ? 'red' : undefined}>
-          {countdown.hours}:{countdown.minutes}:{countdown.seconds}
+          {countdown.formattedHours}:{countdown.formattedMinutes}:{countdown.formattedSeconds}
         </Text>
       </Group>
       <Text size="sm" c="dimmed" mt="xs">
@@ -71,7 +71,7 @@ export const basic: MantineDemo = {
 };
 
 const shortCountdownCode = `
-import { useClockCountDown } from '@mantine/clock';
+import { useClockCountDown } from '@gfazioli/mantine-clock';
 
 function Demo() {
   const countdown = useClockCountDown({
@@ -121,7 +121,7 @@ export const shortCountdown: MantineDemo = {
 };
 
 const specificDateCode = `
-import { useClockCountDown } from '@mantine/clock';
+import { useClockCountDown } from '@gfazioli/mantine-clock';
 
 function Demo() {
   // Countdown to end of today
@@ -130,7 +130,7 @@ function Demo() {
   
   const countdown = useClockCountDown({
     targetDate: endOfDay,
-    use24Hours: false,
+
     padHours: true,
     padMinutes: true,
     padSeconds: true,
@@ -141,12 +141,11 @@ function Demo() {
       <Title order={4} mb="xs">Time Until End of Day</Title>
       <Group gap="xs">
         <Text fw={700}>
-          {countdown.hours}:{countdown.minutes}:{countdown.seconds}
+          {countdown.formattedHours}:{countdown.formattedMinutes}:{countdown.formattedSeconds}
         </Text>
-        {countdown.amPm && <Text size="sm">{countdown.amPm}</Text>}
       </Group>
       <Text size="xs" c="dimmed" mt="xs">
-        {countdown.day} days, {countdown.hours} hours remaining
+        {countdown.days} days, {countdown.hours} hours remaining
       </Text>
     </Paper>
   );
@@ -160,7 +159,7 @@ function SpecificDateDemo() {
 
   const countdown = useClockCountDown({
     targetDate: endOfDay,
-    use24Hours: false,
+
     padHours: true,
     padMinutes: true,
     padSeconds: true,
@@ -173,12 +172,11 @@ function SpecificDateDemo() {
       </Title>
       <Group gap="xs">
         <Text fw={700}>
-          {countdown.hours}:{countdown.minutes}:{countdown.seconds}
+          {countdown.formattedHours}:{countdown.formattedMinutes}:{countdown.formattedSeconds}
         </Text>
-        {countdown.amPm && <Text size="sm">{countdown.amPm}</Text>}
       </Group>
       <Text size="xs" c="dimmed" mt="xs">
-        {countdown.day} days, {countdown.hours} hours remaining
+        {countdown.days} days, {countdown.hours} hours remaining
       </Text>
     </Paper>
   );

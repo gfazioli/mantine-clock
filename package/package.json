@@ -7,14 +7,16 @@
   "license": "MIT",
   "author": "Giovambattista Fazioli <giovambattista.fazioli@gmail.com>",
   "keywords": [
+    "analog",
     "animation",
-    "branding",
     "clock",
+    "countdown",
     "extension",
+    "hooks",
     "mantine",
     "react",
     "react-component",
-    "scroll",
+    "timezone",
     "typescript"
   ],
   "main": "./dist/cjs/index.cjs",

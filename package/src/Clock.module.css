@@ -90,10 +90,7 @@
   background: transparent;
   pointer-events: none;
   /* transition: all 400ms cubic-bezier(0.25, 1, 0.5, 1); */
-  perspective: 1000px;
-  transform-style: preserve-3d;
   backface-visibility: hidden;
-  will-change: transform;
 }
 
 .clockFace {
@@ -108,9 +105,7 @@
   overflow: hidden;
   /* transition: all 400ms cubic-bezier(0.25, 1, 0.5, 1); */
   user-select: none;
-  transform-style: preserve-3d;
   backface-visibility: hidden;
-  will-change: transform, box-shadow;
 }
 
 /* SVG arcs layer (above face, below hands and ticks) */
@@ -122,10 +117,7 @@
   height: 100%;
   pointer-events: none;
   z-index: 13;
-  /* Hint the browser to prioritize geometric precision to reduce aliasing */
   shape-rendering: geometricPrecision;
-  text-rendering: geometricPrecision;
-  image-rendering: -webkit-optimize-contrast;
 }
 
 /* Inner blur circle */
@@ -195,11 +187,8 @@
 .number {
   position: absolute;
   font-weight: 500;
-  color: var(--clock-hour-number-color);
   text-align: center;
   z-index: 15;
-  opacity: var(--clock-hour-number-opacity, 1);
-  /* transition: opacity 0.3s ease; */
   transform: translate(-50%, -50%);
   user-select: none;
   pointer-events: none;
@@ -219,7 +208,6 @@
   position: absolute;
   transform-origin: center bottom;
   z-index: 15;
-  will-change: transform;
 }
 
 .hourHand {
@@ -236,7 +224,6 @@
 .secondHandContainer {
   position: absolute;
   z-index: 17;
-  will-change: transform;
 }
 
 /* Second hand */

@@ -19,7 +19,7 @@ export interface UseClockOptions {
   enabled?: boolean;
   /** The timezone to use for the clock. */
   timezone?: string;
-  /** The frequency (in milliseconds) at which the clock updates. */
+  /** The frequency (in milliseconds) at which the clock updates. Minimum 16ms. */
   updateFrequency?: number;
   /** Whether to use 24-hour format or 12-hour format. */
   use24Hours?: boolean;
@@ -45,20 +45,24 @@ export interface ClockData {
   week: number;
   /** Whether the current year is a leap year. */
   isLeap: boolean;
-  /** The current hour (adjusted for 12/24-hour format). */
-  hours: number | string;
-  /** The current minute. */
-  minutes: number | string;
-  /** The current second. */
-  seconds: number | string;
+  /** The current hour (always a number). */
+  hours: number;
+  /** The current minute (always a number). */
+  minutes: number;
+  /** The current second (always a number). */
+  seconds: number;
   /** The current millisecond. */
   milliseconds: number;
+  /** The formatted hour string (with padding if enabled). */
+  formattedHours: string;
+  /** The formatted minute string (with padding if enabled). */
+  formattedMinutes: string;
+  /** The formatted second string (with padding if enabled). */
+  formattedSeconds: string;
   /** Whether the time is AM or PM (only relevant if use24Hours is false). */
   amPm?: 'AM' | 'PM';
   /** Whether the clock is currently running and updating. */
   isRunning: boolean;
-  /** Function to start the clock. */
-  start: () => void;
   /** Function to pause the clock. */
   pause: () => void;
   /** Function to resume the clock. */
@@ -78,7 +82,7 @@ export interface ClockData {
  * @returns {ClockData} An object containing the current time data.
  *
  * @example
- * const { year, month, day, hours, minutes, seconds } = useClock({
+ * const { year, month, day, hours, minutes, seconds, formattedHours } = useClock({
  *   timezone: 'America/New_York',
  *   updateFrequency: 1000,
  *   use24Hours: false,
@@ -96,6 +100,9 @@ export function useClock({
   const mounted = useMounted();
   const [time, setTime] = useState<dayjs.Dayjs | null>(null);
   const [isRunning, setIsRunning] = useState(false);
+
+  // Clamp updateFrequency to minimum 16ms
+  const effectiveUpdateFrequency = Math.max(16, updateFrequency);
 
   // Refs
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -132,7 +139,7 @@ export function useClock({
     };
 
     updateClock();
-    intervalRef.current = setInterval(updateClock, updateFrequency);
+    intervalRef.current = setInterval(updateClock, effectiveUpdateFrequency);
 
     return () => {
       if (intervalRef.current) {
@@ -140,18 +147,9 @@ export function useClock({
         intervalRef.current = null;
       }
     };
-  }, [mounted, isRunning, timezone, updateFrequency]);
+  }, [mounted, isRunning, timezone, effectiveUpdateFrequency]);
 
   // Control functions
-  const start = useCallback(() => {
-    if (!mounted) {
-      return;
-    }
-    // Update time immediately when starting
-    setTime(dayjs().tz(timezone));
-    setIsRunning(true);
-  }, [mounted, timezone]);
-
   const pause = useCallback(() => {
     setIsRunning(false);
   }, []);
@@ -181,53 +179,53 @@ export function useClock({
 
   // Return static values when disabled or during SSR
   if (!mounted || !time) {
-    const staticHours = padHours ? '00' : 0;
-    const staticMinutes = padMinutes ? '00' : 0;
-    const staticSeconds = padSeconds ? '00' : 0;
-
     return {
-      year: 2024,
+      year: new Date().getFullYear(),
       month: 1,
       day: 1,
       week: 1,
       isLeap: false,
-      hours: staticHours,
-      minutes: staticMinutes,
-      seconds: staticSeconds,
+      hours: 0,
+      minutes: 0,
+      seconds: 0,
       milliseconds: 0,
+      formattedHours: padHours ? '00' : '0',
+      formattedMinutes: padMinutes ? '00' : '0',
+      formattedSeconds: padSeconds ? '00' : '0',
       amPm: use24Hours ? undefined : 'AM',
       isRunning: false,
-      start: () => {},
       pause: () => {},
       resume: () => {},
       reset: () => {},
     };
   }
+
   const year = time.year();
   const month = time.month() + 1; // Months are 0-indexed in dayjs
   const day = time.date();
   const week = time.week();
   const isLeap = time.isLeapYear();
-  let hours: number | string = time.hour();
-  let minutes: number | string = time.minute();
-  let seconds: number | string = time.second();
+  const rawHours = time.hour();
+  const rawMinutes = time.minute();
+  const rawSeconds = time.second();
   const milliseconds = time.millisecond();
 
+  let displayHours = rawHours;
   let amPm: 'AM' | 'PM' | undefined;
   if (!use24Hours) {
-    amPm = Number(hours) >= 12 ? 'PM' : 'AM';
-    hours = Number(hours) % 12 || 12; // Convert to 12-hour format
+    amPm = rawHours >= 12 ? 'PM' : 'AM';
+    displayHours = rawHours % 12 || 12; // Convert to 12-hour format
   }
 
-  if (padHours) {
-    hours = hours.toString().padStart(2, '0');
-  }
-  if (padMinutes) {
-    minutes = minutes.toString().padStart(2, '0');
-  }
-  if (padSeconds) {
-    seconds = seconds.toString().padStart(2, '0');
-  }
+  const formattedHours = padHours
+    ? displayHours.toString().padStart(2, '0')
+    : displayHours.toString();
+  const formattedMinutes = padMinutes
+    ? rawMinutes.toString().padStart(2, '0')
+    : rawMinutes.toString();
+  const formattedSeconds = padSeconds
+    ? rawSeconds.toString().padStart(2, '0')
+    : rawSeconds.toString();
 
   return {
     year,
@@ -235,13 +233,15 @@ export function useClock({
     day,
     week,
     isLeap,
-    hours,
-    minutes,
-    seconds,
+    hours: displayHours,
+    minutes: rawMinutes,
+    seconds: rawSeconds,
     milliseconds,
+    formattedHours,
+    formattedMinutes,
+    formattedSeconds,
     amPm,
     isRunning,
-    start,
     pause,
     resume,
     reset,

@@ -30,7 +30,7 @@ function CountdownDisplay({ countdown, title }: { countdown: any; title: string 
       <Group gap="xs" mt="sm">
         <Button
           size="xs"
-          onClick={countdown.start}
+          onClick={countdown.resume}
           disabled={countdown.isRunning || countdown.isCompleted}
         >
           Start
@@ -87,7 +87,6 @@ export function BasicCountdown() {
   const countdown1h = useClockCountDown({
     hours: 1,
     enabled: false, // Start paused to let user control
-    use24Hours: false,
     padHours: true,
     padMinutes: true,
     padSeconds: true,
@@ -101,7 +100,7 @@ export function BasicCountdown() {
     <Stack gap="md">
       <Group gap="xs">
         <Button
-          onClick={countdown30s.start}
+          onClick={countdown30s.resume}
           disabled={countdown30s.isRunning || countdown30s.isCompleted}
         >
           Start 30s
@@ -121,9 +120,9 @@ export function BasicCountdown() {
       <Group gap="xs">
         <Button
           onClick={() => {
-            countdown30s.start();
-            countdown2m.start();
-            countdown1h.start();
+            countdown30s.resume();
+            countdown2m.resume();
+            countdown1h.resume();
           }}
           disabled={countdown30s.isRunning && countdown2m.isRunning && countdown1h.isRunning}
         >
@@ -180,7 +179,7 @@ export function SpecificDateCountdown() {
       <Title order={3}>Countdown to End of Day</Title>
 
       <Group gap="xs">
-        <Button onClick={countdown.start} disabled={countdown.isRunning || countdown.isCompleted}>
+        <Button onClick={countdown.resume} disabled={countdown.isRunning || countdown.isCompleted}>
           Start Countdown
         </Button>
         <Button onClick={countdown.pause} disabled={!countdown.isRunning} variant="outline">
@@ -197,7 +196,7 @@ export function SpecificDateCountdown() {
           Target: {endOfDay.toLocaleString()}
         </Text>
         <Text size="sm" c="dimmed">
-          Days: {countdown.day}, Hours: {countdown.hours}, Minutes: {countdown.minutes}, Seconds:{' '}
+          Days: {countdown.days}, Hours: {countdown.hours}, Minutes: {countdown.minutes}, Seconds:{' '}
           {countdown.seconds}
         </Text>
       </Box>

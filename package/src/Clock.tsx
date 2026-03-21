@@ -26,6 +26,13 @@ import classes from './Clock.module.css';
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
+// --- Constants (A2) ---
+const TICK_OFFSET_RATIO = 0.028;
+const CENTER_DOT_RATIO = 0.034;
+const COUNTERWEIGHT_MULTIPLIER = 3;
+
+const round2 = (n: number): number => Math.round(n * 100) / 100;
+
 // Common timezone strings for better IntelliSense
 export type Timezone =
   | 'UTC'
@@ -185,6 +192,9 @@ export interface ClockBaseProps {
 
   /** Time value to display. Can be a string ("10:30", "18:15:07"), Date, or dayjs object. When running=true, this sets the starting time. When running=false and no value is provided, displays the current time. */
   value?: string | Date | dayjs.Dayjs;
+
+  /** Custom aria-label for the clock. If not provided, a default label with the current time will be used. */
+  ariaLabel?: string;
 }
 
 export interface ClockArcsProps {
@@ -243,6 +253,7 @@ export const defaultProps: Partial<ClockProps> = {
   secondHandOpacity: 1,
   minuteHandOpacity: 1,
   hourHandOpacity: 1,
+  secondHandBehavior: 'tick',
   running: true,
 };
 
@@ -296,28 +307,22 @@ const varsResolver = createVarsResolver<ClockFactory>(
           theme,
         }).value,
 
-        '--clock-hour-ticks-opacity': (Math.round((hourTicksOpacity || 1) * 100) / 100).toString(),
+        '--clock-hour-ticks-opacity': round2(hourTicksOpacity ?? 1).toString(),
         '--clock-minute-ticks-color': parseThemeColor({
           color: minuteTicksColor || '',
           theme,
         }).value,
-        '--clock-minute-ticks-opacity': (
-          Math.round((minuteTicksOpacity || 1) * 100) / 100
-        ).toString(),
+        '--clock-minute-ticks-opacity': round2(minuteTicksOpacity ?? 1).toString(),
         '--clock-primary-numbers-color': parseThemeColor({
           color: primaryNumbersColor || '',
           theme,
         }).value,
-        '--clock-primary-numbers-opacity': (
-          Math.round((primaryNumbersOpacity || 1) * 100) / 100
-        ).toString(),
+        '--clock-primary-numbers-opacity': round2(primaryNumbersOpacity ?? 1).toString(),
         '--clock-secondary-numbers-color': parseThemeColor({
           color: secondaryNumbersColor || '',
           theme,
         }).value,
-        '--clock-secondary-numbers-opacity': (
-          Math.round((secondaryNumbersOpacity || 1) * 100) / 100
-        ).toString(),
+        '--clock-secondary-numbers-opacity': round2(secondaryNumbersOpacity ?? 1).toString(),
         '--clock-second-hand-color': parseThemeColor({
           color: secondHandColor || '',
           theme,
@@ -388,6 +393,134 @@ const parseTimeValue = (value: string | Date | dayjs.Dayjs | undefined): Date | 
   return null;
 };
 
+// --- ClockFaceStatic component (A1) ---
+interface ClockFaceStaticProps {
+  getStyles: GetStylesApi<ClockFactory>;
+  effectiveSize: number;
+  hourTicksOpacity?: number;
+  minuteTicksOpacity?: number;
+  primaryNumbersOpacity?: number;
+  secondaryNumbersOpacity?: number;
+  hourNumbersDistance?: number;
+  primaryNumbersProps?: TextProps;
+  secondaryNumbersProps?: TextProps;
+}
+
+const ClockFaceStatic: React.FC<ClockFaceStaticProps> = React.memo(
+  ({
+    getStyles,
+    effectiveSize,
+    hourTicksOpacity,
+    minuteTicksOpacity,
+    primaryNumbersOpacity,
+    secondaryNumbersOpacity,
+    hourNumbersDistance = 0.75,
+    primaryNumbersProps,
+    secondaryNumbersProps,
+  }) => {
+    const clockRadius = Math.round(effectiveSize / 2);
+    const numberRadius = Math.round(clockRadius * hourNumbersDistance);
+    const tickOffset = Math.round(effectiveSize * TICK_OFFSET_RATIO);
+
+    return (
+      <Box {...getStyles('hourMarks')}>
+        {/* Hour ticks */}
+        {(hourTicksOpacity ?? 1) !== 0 &&
+          Array.from({ length: 12 }, (_, i) => (
+            <Box
+              key={`hour-tick-${i}`}
+              {...getStyles('hourTick', {
+                style: {
+                  top: tickOffset,
+                  left: '50%',
+                  transformOrigin: `50% ${clockRadius - tickOffset}px`,
+                  transform: `translateX(-50%) rotate(${i * 30}deg)`,
+                },
+              })}
+            />
+          ))}
+
+        {/* Minute ticks */}
+        {(minuteTicksOpacity ?? 1) !== 0 &&
+          Array.from({ length: 60 }, (_, i) => {
+            // Skip positions where hour ticks are (every 5 minutes)
+            if (i % 5 === 0) {
+              return null;
+            }
+
+            return (
+              <Box
+                key={`minute-tick-${i}`}
+                {...getStyles('minuteTick', {
+                  style: {
+                    top: tickOffset,
+                    left: '50%',
+                    transformOrigin: `50% ${clockRadius - tickOffset}px`,
+                    transform: `translateX(-50%) rotate(${i * 6}deg)`,
+                  },
+                })}
+              />
+            );
+          })}
+
+        {/* Hour numbers - Primary (12, 3, 6, 9) */}
+        {(primaryNumbersOpacity ?? 1) !== 0 &&
+          [12, 3, 6, 9].map((num) => {
+            // Calculate position based on hour number
+            const i = num === 12 ? 0 : num;
+            const angle = (i * 30 - 90) * (Math.PI / 180); // -90 to start from top (12 o'clock)
+            const x = Math.round(clockRadius + Math.cos(angle) * numberRadius);
+            const y = Math.round(clockRadius + Math.sin(angle) * numberRadius);
+
+            return (
+              <Text
+                key={`primary-number-${num}`}
+                {...primaryNumbersProps}
+                {...getStyles('primaryNumber', {
+                  className: getStyles('number').className,
+                  style: {
+                    left: x,
+                    top: y,
+                  },
+                })}
+              >
+                {num}
+              </Text>
+            );
+          })}
+
+        {/* Hour numbers - Secondary (1, 2, 4, 5, 7, 8, 10, 11) */}
+        {(secondaryNumbersOpacity ?? 1) !== 0 &&
+          [1, 2, 4, 5, 7, 8, 10, 11].map((num) => {
+            // Calculate position based on hour number
+            const i = num;
+            const angle = (i * 30 - 90) * (Math.PI / 180); // -90 to start from top (12 o'clock)
+            const x = Math.round(clockRadius + Math.cos(angle) * numberRadius);
+            const y = Math.round(clockRadius + Math.sin(angle) * numberRadius);
+
+            return (
+              <Text
+                key={`secondary-number-${num}`}
+                {...secondaryNumbersProps}
+                {...getStyles('secondaryNumber', {
+                  className: getStyles('number').className,
+                  style: {
+                    left: x,
+                    top: y,
+                  },
+                })}
+              >
+                {num}
+              </Text>
+            );
+          })}
+      </Box>
+    );
+  }
+);
+
+ClockFaceStatic.displayName = 'ClockFaceStatic';
+
 interface RealClockProps extends ClockBaseProps, ClockArcsProps {
   time: Date;
   getStyles: GetStylesApi<ClockFactory>;
@@ -397,7 +530,7 @@ interface RealClockProps extends ClockBaseProps, ClockArcsProps {
 /**
  * RealClock component
  */
-const RealClock: React.FC<RealClockProps> = (props) => {
+const RealClock: React.FC<RealClockProps> = React.memo((props) => {
   const {
     time,
     timezone,
@@ -446,13 +579,10 @@ const RealClock: React.FC<RealClockProps> = (props) => {
   const hourAngle = hours * 30 + minutes * 0.5; // 30 degrees per hour + minute adjustment
   const minuteAngle = minutes * 6; // 6 degrees per minute
 
-  // Calculate second hand angle based on behavior
+  // Calculate second hand angle based on behavior (B4: default is now 'tick')
   let secondAngle = 0;
 
   switch (secondHandBehavior) {
-    case 'tick':
-      secondAngle = seconds * 6;
-      break;
     case 'tick-half':
       secondAngle = (seconds + Math.floor(milliseconds / 500) * 0.5) * 6;
       break;
@@ -460,15 +590,17 @@ const RealClock: React.FC<RealClockProps> = (props) => {
       secondAngle = (seconds + Math.floor(milliseconds / 125) * 0.125) * 6;
       break;
     case 'smooth':
-    default:
       secondAngle = (seconds + milliseconds / 1000) * 6;
+      break;
+    case 'tick':
+    default:
+      secondAngle = seconds * 6;
       break;
   }
 
   // Use effective size for all calculations to maintain proportions
   const size = effectiveSize;
   const clockRadius = Math.round(size / 2);
-  const numberRadius = Math.round(clockRadius * hourNumbersDistance);
   const calculatedHourHandLength = Math.round(
     clockRadius * (hourHandLength ?? defaultProps.hourHandLength!)
   );
@@ -479,8 +611,7 @@ const RealClock: React.FC<RealClockProps> = (props) => {
     clockRadius * (secondHandLength ?? defaultProps.secondHandLength!)
   );
 
-  const centerSize = Math.round(size * 0.034); // Center dot size
-  const tickOffset = Math.round(size * 0.028); // Distance from edge for ticks
+  const centerSize = Math.round(size * CENTER_DOT_RATIO); // Center dot size
 
   // Helpers to compute angles and SVG path for sectors
   const toClockAngle = (deg: number) => ((deg % 360) + 360) % 360; // normalize
@@ -561,6 +692,11 @@ const RealClock: React.FC<RealClockProps> = (props) => {
   const showMinArc = withMinutesArc === true && (minutesArcOpacity ?? 1) !== 0;
   const showHrArc = withHoursArc === true && (hoursArcOpacity ?? 1) !== 0;
 
+  // Counterweight width using secondHandSize (B3)
+  const counterweightWidth = round2(
+    size * (secondHandSize ?? defaultProps.secondHandSize!) * COUNTERWEIGHT_MULTIPLIER
+  );
+
   return (
     <Box {...getStyles('clockContainer')}>
       {/* Glass wrapper with shadow */}
@@ -584,7 +720,7 @@ const RealClock: React.FC<RealClockProps> = (props) => {
                     hoursArcDirection
                   )}
                   fill="var(--clock-hours-arc-color-resolved)"
-                  fillOpacity={Math.round((hoursArcOpacity ?? 1) * 100) / 100}
+                  fillOpacity={round2(hoursArcOpacity ?? 1)}
                 />
               )}
               {showMinArc && (
@@ -598,7 +734,7 @@ const RealClock: React.FC<RealClockProps> = (props) => {
                     minutesArcDirection
                   )}
                   fill="var(--clock-minutes-arc-color-resolved)"
-                  fillOpacity={Math.round((minutesArcOpacity ?? 1) * 100) / 100}
+                  fillOpacity={round2(minutesArcOpacity ?? 1)}
                 />
               )}
               {showSecArc && (
@@ -612,104 +748,23 @@ const RealClock: React.FC<RealClockProps> = (props) => {
                     secondsArcDirection
                   )}
                   fill="var(--clock-seconds-arc-color-resolved)"
-                  fillOpacity={Math.round((secondsArcOpacity ?? 1) * 100) / 100}
+                  fillOpacity={round2(secondsArcOpacity ?? 1)}
                 />
               )}
             </svg>
           )}
-          {/* Hour marks container */}
-          <Box {...getStyles('hourMarks')}>
-            {/* Hour ticks */}
-            {hourTicksOpacity !== 0 &&
-              Array.from({ length: 12 }, (_, i) => (
-                <Box
-                  key={`hour-tick-${i}`}
-                  {...getStyles('hourTick', {
-                    style: {
-                      top: tickOffset,
-                      left: '50%',
-                      transformOrigin: `50% ${clockRadius - tickOffset}px`,
-                      transform: `translateX(-50%) rotate(${i * 30}deg)`,
-                    },
-                  })}
-                />
-              ))}
-
-            {/* Minute ticks */}
-            {minuteTicksOpacity !== 0 &&
-              Array.from({ length: 60 }, (_, i) => {
-                // Skip positions where hour ticks are (every 5 minutes)
-                if (i % 5 === 0) {
-                  return null;
-                }
-
-                return (
-                  <Box
-                    key={`minute-tick-${i}`}
-                    {...getStyles('minuteTick', {
-                      style: {
-                        top: tickOffset,
-                        left: '50%',
-                        transformOrigin: `50% ${clockRadius - tickOffset}px`,
-                        transform: `translateX(-50%) rotate(${i * 6}deg)`,
-                      },
-                    })}
-                  />
-                );
-              })}
-
-            {/* Hour numbers - Primary (12, 3, 6, 9) */}
-            {primaryNumbersOpacity !== 0 &&
-              [12, 3, 6, 9].map((num) => {
-                // Calculate position based on hour number
-                const i = num === 12 ? 0 : num;
-                const angle = (i * 30 - 90) * (Math.PI / 180); // -90 to start from top (12 o'clock)
-                const x = Math.round(clockRadius + Math.cos(angle) * numberRadius);
-                const y = Math.round(clockRadius + Math.sin(angle) * numberRadius);
-
-                return (
-                  <Text
-                    key={`primary-number-${num}`}
-                    {...primaryNumbersProps}
-                    {...getStyles('primaryNumber', {
-                      className: getStyles('number').className,
-                      style: {
-                        left: x,
-                        top: y,
-                      },
-                    })}
-                  >
-                    {num}
-                  </Text>
-                );
-              })}
-
-            {/* Hour numbers - Secondary (1, 2, 4, 5, 7, 8, 10, 11) */}
-            {secondaryNumbersOpacity !== 0 &&
-              [1, 2, 4, 5, 7, 8, 10, 11].map((num) => {
-                // Calculate position based on hour number
-                const i = num;
-                const angle = (i * 30 - 90) * (Math.PI / 180); // -90 to start from top (12 o'clock)
-                const x = Math.round(clockRadius + Math.cos(angle) * numberRadius);
-                const y = Math.round(clockRadius + Math.sin(angle) * numberRadius);
-
-                return (
-                  <Text
-                    key={`secondary-number-${num}`}
-                    {...secondaryNumbersProps}
-                    {...getStyles('secondaryNumber', {
-                      className: getStyles('number').className,
-                      style: {
-                        left: x,
-                        top: y,
-                      },
-                    })}
-                  >
-                    {num}
-                  </Text>
-                );
-              })}
-          </Box>
+          {/* Hour marks container — shared ClockFaceStatic */}
+          <ClockFaceStatic
+            getStyles={getStyles}
+            effectiveSize={size}
+            hourTicksOpacity={hourTicksOpacity}
+            minuteTicksOpacity={minuteTicksOpacity}
+            primaryNumbersOpacity={primaryNumbersOpacity}
+            secondaryNumbersOpacity={secondaryNumbersOpacity}
+            hourNumbersDistance={hourNumbersDistance}
+            primaryNumbersProps={primaryNumbersProps}
+            secondaryNumbersProps={secondaryNumbersProps}
+          />
 
           {/* Hour hand */}
           {(hourHandOpacity ?? defaultProps.hourHandOpacity!) !== 0 && (
@@ -718,18 +773,14 @@ const RealClock: React.FC<RealClockProps> = (props) => {
               {...getStyles('hand', {
                 className: getStyles('hourHand').className,
                 style: {
-                  width:
-                    Math.round(size * (hourHandSize ?? defaultProps.hourHandSize!) * 100) / 100,
+                  width: round2(size * (hourHandSize ?? defaultProps.hourHandSize!)),
                   height: calculatedHourHandLength,
-                  opacity:
-                    Math.round((hourHandOpacity ?? defaultProps.hourHandOpacity!) * 100) / 100,
+                  opacity: round2(hourHandOpacity ?? defaultProps.hourHandOpacity!),
                   bottom: clockRadius,
                   left: clockRadius,
-                  marginLeft:
-                    Math.round((-(size * (hourHandSize ?? defaultProps.hourHandSize!)) / 2) * 100) /
-                    100,
-                  borderRadius: `${Math.round(size * (hourHandSize ?? defaultProps.hourHandSize!) * 100) / 100}px`,
-                  transform: `rotate(${Math.round(hourAngle * 100) / 100}deg)`,
+                  marginLeft: round2(-(size * (hourHandSize ?? defaultProps.hourHandSize!)) / 2),
+                  borderRadius: `${round2(size * (hourHandSize ?? defaultProps.hourHandSize!))}px`,
+                  transform: `rotate(${round2(hourAngle)}deg)`,
                 },
               })}
             />
@@ -741,19 +792,16 @@ const RealClock: React.FC<RealClockProps> = (props) => {
               {...getStyles('hand', {
                 className: getStyles('minuteHand').className,
                 style: {
-                  width:
-                    Math.round(size * (minuteHandSize ?? defaultProps.minuteHandSize!) * 100) / 100,
+                  width: round2(size * (minuteHandSize ?? defaultProps.minuteHandSize!)),
                   height: calculatedMinuteHandLength,
-                  opacity:
-                    Math.round((minuteHandOpacity ?? defaultProps.minuteHandOpacity!) * 100) / 100,
+                  opacity: round2(minuteHandOpacity ?? defaultProps.minuteHandOpacity!),
                   bottom: clockRadius,
                   left: clockRadius,
-                  marginLeft:
-                    Math.round(
-                      (-(size * (minuteHandSize ?? defaultProps.minuteHandSize!)) / 2) * 100
-                    ) / 100,
-                  borderRadius: `${Math.round(size * (minuteHandSize ?? defaultProps.minuteHandSize!) * 100) / 100}px`,
-                  transform: `rotate(${Math.round(minuteAngle * 100) / 100}deg)`,
+                  marginLeft: round2(
+                    -(size * (minuteHandSize ?? defaultProps.minuteHandSize!)) / 2
+                  ),
+                  borderRadius: `${round2(size * (minuteHandSize ?? defaultProps.minuteHandSize!))}px`,
+                  transform: `rotate(${round2(minuteAngle)}deg)`,
                 },
               })}
             />
@@ -764,17 +812,15 @@ const RealClock: React.FC<RealClockProps> = (props) => {
             <Box
               {...getStyles('secondHandContainer', {
                 style: {
-                  width:
-                    Math.round(size * (secondHandSize ?? defaultProps.secondHandSize!) * 100) / 100,
+                  width: round2(size * (secondHandSize ?? defaultProps.secondHandSize!)),
                   height: calculatedSecondHandLength,
                   top: clockRadius - calculatedSecondHandLength,
                   left: clockRadius,
-                  marginLeft:
-                    Math.round(
-                      (-(size * (secondHandSize ?? defaultProps.secondHandSize!)) / 2) * 100
-                    ) / 100,
-                  transformOrigin: `${Math.round(((size * (secondHandSize ?? defaultProps.secondHandSize!)) / 2) * 100) / 100}px ${calculatedSecondHandLength}px`,
-                  transform: `rotate(${Math.round(secondAngle * 100) / 100}deg)`,
+                  marginLeft: round2(
+                    -(size * (secondHandSize ?? defaultProps.secondHandSize!)) / 2
+                  ),
+                  transformOrigin: `${round2((size * (secondHandSize ?? defaultProps.secondHandSize!)) / 2)}px ${calculatedSecondHandLength}px`,
+                  transform: `rotate(${round2(secondAngle)}deg)`,
                 },
               })}
             >
@@ -782,28 +828,22 @@ const RealClock: React.FC<RealClockProps> = (props) => {
               <Box
                 {...getStyles('secondHand', {
                   style: {
-                    width:
-                      Math.round(size * (secondHandSize ?? defaultProps.secondHandSize!) * 100) /
-                      100,
+                    width: round2(size * (secondHandSize ?? defaultProps.secondHandSize!)),
                     height: calculatedSecondHandLength,
-                    opacity:
-                      Math.round((secondHandOpacity ?? defaultProps.secondHandOpacity!) * 100) /
-                      100,
+                    opacity: round2(secondHandOpacity ?? defaultProps.secondHandOpacity!),
                   },
                 })}
               />
 
-              {/* Second hand counterweight */}
+              {/* Second hand counterweight (B3) */}
               <Box
                 {...getStyles('secondHandCounterweight', {
                   style: {
-                    width: Math.round(size * 0.006 * 3 * 100) / 100,
-                    opacity:
-                      Math.round((secondHandOpacity ?? defaultProps.secondHandOpacity!) * 100) /
-                      100,
+                    width: counterweightWidth,
+                    opacity: round2(secondHandOpacity ?? defaultProps.secondHandOpacity!),
                     left: Math.round(
                       (size * (secondHandSize ?? defaultProps.secondHandSize!)) / 2 -
-                        (size * 0.006 * 3) / 2
+                        counterweightWidth / 2
                     ),
                   },
                 })}
@@ -820,8 +860,7 @@ const RealClock: React.FC<RealClockProps> = (props) => {
               style: {
                 width: centerSize,
                 height: centerSize,
-                opacity:
-                  Math.round((secondHandOpacity ?? defaultProps.secondHandOpacity!) * 100) / 100,
+                opacity: round2(secondHandOpacity ?? defaultProps.secondHandOpacity!),
                 top: Math.round(clockRadius - centerSize / 2),
                 left: Math.round(clockRadius - centerSize / 2),
               },
@@ -831,13 +870,16 @@ const RealClock: React.FC<RealClockProps> = (props) => {
       </Box>
     </Box>
   );
-};
+});
+
+RealClock.displayName = 'RealClock';
 
 export const Clock = factory<ClockFactory>((_props, ref) => {
   const props = useProps('Clock', defaultProps, _props);
   const [time, setTime] = useState(new Date());
   const [hasMounted, setHasMounted] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const rafRef = useRef<number | null>(null);
   const startTimeRef = useRef<Date | null>(null);
   const realStartTimeRef = useRef<Date | null>(null);
 
@@ -866,14 +908,13 @@ export const Clock = factory<ClockFactory>((_props, ref) => {
     hourHandOpacity,
     hourHandSize,
     hourHandLength,
-    hourTicksOpacity: _hourTicksOpacity,
-    minuteTicksOpacity: _minuteTicksOpacity,
     hourNumbersDistance,
     primaryNumbersProps,
     secondaryNumbersProps,
     timezone,
     running,
     value,
+    ariaLabel,
     withSecondsArc,
     secondsArcFrom,
     secondsArcDirection,
@@ -953,10 +994,14 @@ export const Clock = factory<ClockFactory>((_props, ref) => {
   };
 
   useEffect(() => {
-    // Clear existing interval
+    // Clear existing interval and rAF
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
+    }
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
     }
 
     // If not running, don't start any interval
@@ -974,138 +1019,73 @@ export const Clock = factory<ClockFactory>((_props, ref) => {
       realStartTimeRef.current = null;
     }
 
-    let interval = 1000;
-    switch (secondHandBehavior) {
-      case 'smooth':
-        interval = 16;
-        break;
-      case 'tick-half':
-        interval = 500;
-        break;
-      case 'tick-high-freq':
-        interval = 125;
-        break;
-      case 'tick':
-      default:
-        interval = 1000;
-        break;
-    }
-
     const updateTime = () => {
       setTime(new Date());
     };
 
     updateTime();
-    intervalRef.current = setInterval(updateTime, interval);
+
+    // P1: Use requestAnimationFrame for smooth mode
+    if (secondHandBehavior === 'smooth') {
+      const animate = () => {
+        setTime(new Date());
+        rafRef.current = requestAnimationFrame(animate);
+      };
+      animate();
+    } else {
+      let interval = 1000;
+      switch (secondHandBehavior) {
+        case 'tick-half':
+          interval = 500;
+          break;
+        case 'tick-high-freq':
+          interval = 125;
+          break;
+        case 'tick':
+        default:
+          interval = 1000;
+          break;
+      }
+
+      intervalRef.current = setInterval(updateTime, interval);
+    }
 
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+      }
     };
-  }, [running, value, secondHandBehavior, secondHandOpacity]);
+  }, [running, value, secondHandBehavior]);
 
   // Prevent hydration mismatch by not rendering dynamic content during SSR
   if (!hasMounted) {
     return (
-      <Box {...getStyles('root')} ref={ref} {...others}>
+      <Box
+        {...getStyles('root')}
+        ref={ref}
+        role="img"
+        aria-label={ariaLabel || 'Clock'}
+        {...others}
+      >
         {/* Render static clock structure during SSR */}
         <Box {...getStyles('clockContainer')}>
           <Box {...getStyles('glassWrapper')}>
             <Box {...getStyles('clockFace')}>
-              {/* Static hour marks and numbers only */}
-              <Box {...getStyles('hourMarks')}>
-                {/* Hour ticks */}
-                {(hourTicksOpacity || 1) !== 0 &&
-                  Array.from({ length: 12 }, (_, i) => (
-                    <Box
-                      key={`hour-tick-${i}`}
-                      {...getStyles('hourTick', {
-                        style: {
-                          top: Math.round(effectiveSize * 0.028),
-                          left: '50%',
-                          transformOrigin: `50% ${Math.round(effectiveSize / 2) - Math.round(effectiveSize * 0.028)}px`,
-                          transform: `translateX(-50%) rotate(${i * 30}deg)`,
-                        },
-                      })}
-                    />
-                  ))}
-
-                {/* Minute ticks */}
-                {(minuteTicksOpacity || 1) !== 0 &&
-                  Array.from({ length: 60 }, (_, i) => {
-                    if (i % 5 === 0) {
-                      return null;
-                    }
-                    return (
-                      <Box
-                        key={`minute-tick-${i}`}
-                        {...getStyles('minuteTick', {
-                          style: {
-                            top: Math.round(effectiveSize * 0.028),
-                            left: '50%',
-                            transformOrigin: `50% ${Math.round(effectiveSize / 2) - Math.round(effectiveSize * 0.028)}px`,
-                            transform: `translateX(-50%) rotate(${i * 6}deg)`,
-                          },
-                        })}
-                      />
-                    );
-                  })}
-
-                {/* Hour numbers - Primary (12, 3, 6, 9) */}
-                {(primaryNumbersOpacity || 1) !== 0 &&
-                  [12, 3, 6, 9].map((num) => {
-                    const i = num === 12 ? 0 : num;
-                    const angle = (i * 30 - 90) * (Math.PI / 180);
-                    const clockRadius = Math.round(effectiveSize / 2);
-                    const numberRadius = Math.round(clockRadius * (hourNumbersDistance || 0.75));
-                    const x = Math.round(clockRadius + Math.cos(angle) * numberRadius);
-                    const y = Math.round(clockRadius + Math.sin(angle) * numberRadius);
-
-                    return (
-                      <Text
-                        key={`primary-number-${num}`}
-                        {...primaryNumbersProps}
-                        {...getStyles('primaryNumber', {
-                          className: getStyles('number').className,
-                          style: {
-                            left: x,
-                            top: y,
-                          },
-                        })}
-                      >
-                        {num}
-                      </Text>
-                    );
-                  })}
-
-                {/* Hour numbers - Secondary (1, 2, 4, 5, 7, 8, 10, 11) */}
-                {(secondaryNumbersOpacity || 1) !== 0 &&
-                  [1, 2, 4, 5, 7, 8, 10, 11].map((num) => {
-                    const i = num;
-                    const angle = (i * 30 - 90) * (Math.PI / 180);
-                    const clockRadius = Math.round(effectiveSize / 2);
-                    const numberRadius = Math.round(clockRadius * (hourNumbersDistance || 0.75));
-                    const x = Math.round(clockRadius + Math.cos(angle) * numberRadius);
-                    const y = Math.round(clockRadius + Math.sin(angle) * numberRadius);
-
-                    return (
-                      <Text
-                        key={`secondary-number-${num}`}
-                        {...secondaryNumbersProps}
-                        {...getStyles('secondaryNumber', {
-                          className: getStyles('number').className,
-                          style: {
-                            left: x,
-                            top: y,
-                          },
-                        })}
-                      >
-                        {num}
-                      </Text>
-                    );
-                  })}
-              </Box>
+              {/* Static hour marks and numbers only — shared ClockFaceStatic */}
+              <ClockFaceStatic
+                getStyles={getStyles}
+                effectiveSize={effectiveSize}
+                hourTicksOpacity={hourTicksOpacity}
+                minuteTicksOpacity={minuteTicksOpacity}
+                primaryNumbersOpacity={primaryNumbersOpacity}
+                secondaryNumbersOpacity={secondaryNumbersOpacity}
+                hourNumbersDistance={hourNumbersDistance}
+                primaryNumbersProps={primaryNumbersProps}
+                secondaryNumbersProps={secondaryNumbersProps}
+              />
             </Box>
           </Box>
         </Box>
@@ -1115,8 +1095,15 @@ export const Clock = factory<ClockFactory>((_props, ref) => {
 
   const effectiveTime = getEffectiveTime();
 
+  // Build aria-label from the effective time
+  const timezoneTime =
+    timezone && timezone !== '' ? dayjs(effectiveTime).tz(timezone) : dayjs(effectiveTime);
+  const computedAriaLabel =
+    ariaLabel ||
+    `Clock showing ${String(timezoneTime.hour()).padStart(2, '0')}:${String(timezoneTime.minute()).padStart(2, '0')}:${String(timezoneTime.second()).padStart(2, '0')}`;
+
   return (
-    <Box {...getStyles('root')} ref={ref} {...others}>
+    <Box {...getStyles('root')} ref={ref} role="img" aria-label={computedAriaLabel} {...others}>
       <RealClock
         time={effectiveTime}
         getStyles={getStyles}
