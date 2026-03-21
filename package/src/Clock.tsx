@@ -775,7 +775,7 @@ const RealClock: React.FC<RealClockProps> = React.memo((props) => {
 
   // Use effective size for all calculations to maintain proportions
   const size = effectiveSize;
-  const clockRadius = geometry.centerX;
+  const { centerX, centerY } = geometry;
   const calculatedHourHandLength = geometry.handLength(
     hourHandLength ?? defaultProps.hourHandLength!
   );
@@ -945,8 +945,8 @@ const RealClock: React.FC<RealClockProps> = React.memo((props) => {
                     width: round2(size * (hourHandSize ?? defaultProps.hourHandSize!)),
                     height: calculatedHourHandLength,
                     opacity: round2(hourHandOpacity ?? defaultProps.hourHandOpacity!),
-                    bottom: clockRadius,
-                    left: clockRadius,
+                    bottom: centerY,
+                    left: centerX,
                     marginLeft: round2(-(size * (hourHandSize ?? defaultProps.hourHandSize!)) / 2),
                     borderRadius: `${round2(size * (hourHandSize ?? defaultProps.hourHandSize!))}px`,
                     transform: `rotate(${handAngles.hour}deg)`,
@@ -975,8 +975,8 @@ const RealClock: React.FC<RealClockProps> = React.memo((props) => {
                     width: round2(size * (minuteHandSize ?? defaultProps.minuteHandSize!)),
                     height: calculatedMinuteHandLength,
                     opacity: round2(minuteHandOpacity ?? defaultProps.minuteHandOpacity!),
-                    bottom: clockRadius,
-                    left: clockRadius,
+                    bottom: centerY,
+                    left: centerX,
                     marginLeft: round2(
                       -(size * (minuteHandSize ?? defaultProps.minuteHandSize!)) / 2
                     ),
@@ -1005,8 +1005,8 @@ const RealClock: React.FC<RealClockProps> = React.memo((props) => {
                   style: {
                     width: round2(size * (secondHandSize ?? defaultProps.secondHandSize!)),
                     height: calculatedSecondHandLength,
-                    top: clockRadius - calculatedSecondHandLength,
-                    left: clockRadius,
+                    top: centerY - calculatedSecondHandLength,
+                    left: centerX,
                     marginLeft: round2(
                       -(size * (secondHandSize ?? defaultProps.secondHandSize!)) / 2
                     ),
@@ -1053,8 +1053,8 @@ const RealClock: React.FC<RealClockProps> = React.memo((props) => {
                 width: centerSize,
                 height: centerSize,
                 opacity: round2(secondHandOpacity ?? defaultProps.secondHandOpacity!),
-                top: Math.round(clockRadius - centerSize / 2),
-                left: Math.round(clockRadius - centerSize / 2),
+                top: Math.round(centerY - centerSize / 2),
+                left: Math.round(centerX - centerSize / 2),
               },
             })}
           />
