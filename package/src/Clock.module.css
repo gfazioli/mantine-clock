@@ -108,6 +108,21 @@
   backface-visibility: hidden;
 }
 
+/* Custom face content (between background and ticks/hands) */
+.faceContent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  overflow: hidden;
+}
+
 /* SVG arcs layer (above face, below hands and ticks) */
 .arcsLayer {
   position: absolute;

@@ -20,3 +20,9 @@ export { worldClocks as useClockWorldClocks } from './useClock.demo.worldClocks'
 // useClockCountDown hook demos
 export { interactive as useClockCountDownInteractive } from './useClockCountDown.demo.interactive';
 export { targetDates as useClockCountDownTargetDates } from './useClockCountDown.demo.targetDates';
+
+// New feature demos
+export { digital } from './Clock.demo.digital';
+export { shapes } from './Clock.demo.shapes';
+export { faceContentDemo } from './Clock.demo.faceContent';
+export { sectorsDemo } from './Clock.demo.sectors';

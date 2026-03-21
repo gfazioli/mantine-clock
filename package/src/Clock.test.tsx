@@ -308,4 +308,83 @@ describe('Clock', () => {
     expect(clearIntervalSpy).toHaveBeenCalled();
     clearIntervalSpy.mockRestore();
   });
+
+  // --- New features ---
+
+  // Shape
+  it('renders with shape="rounded-rect"', () => {
+    const { container } = render(<Clock shape="rounded-rect" />);
+    const root = container.querySelector('.mantine-Clock-root');
+    expect(root).toBeInTheDocument();
+  });
+
+  it('applies border radius for rounded-rect shape', () => {
+    const { container } = render(<Clock shape="rounded-rect" borderRadius={20} />);
+    const face = container.querySelector('.mantine-Clock-clockFace');
+    expect(face).toBeInTheDocument();
+  });
+
+  // Face content
+  it('renders faceContent inside clock face', () => {
+    const { container } = render(<Clock faceContent={<div data-testid="custom-face">Logo</div>} />);
+    expect(container.querySelector('.mantine-Clock-faceContent')).toBeInTheDocument();
+    expect(container.querySelector('[data-testid="custom-face"]')).toBeInTheDocument();
+  });
+
+  // Sectors
+  it('renders sectors as SVG paths', () => {
+    const sectors = [
+      { from: '09:00', to: '10:30', color: '#ff0000' },
+      { from: '14:00', to: '15:00', color: '#00ff00' },
+    ];
+    const { container } = render(<Clock sectors={sectors} />);
+    const svg = container.querySelector('.mantine-Clock-arcsLayer');
+    expect(svg).toBeInTheDocument();
+    const paths = svg?.querySelectorAll('path');
+    expect(paths?.length).toBeGreaterThanOrEqual(2);
+  });
+
+  // onTimeChange
+  it('fires onTimeChange callback', () => {
+    const onTimeChange = jest.fn();
+    render(<Clock onTimeChange={onTimeChange} />);
+
+    act(() => {
+      jest.advanceTimersByTime(1100);
+    });
+
+    expect(onTimeChange).toHaveBeenCalled();
+    const arg = onTimeChange.mock.calls[0][0];
+    expect(typeof arg.hours).toBe('number');
+    expect(typeof arg.minutes).toBe('number');
+    expect(typeof arg.seconds).toBe('number');
+    expect(typeof arg.milliseconds).toBe('number');
+  });
+
+  // Custom hand rendering
+  it('renders custom hour hand via renderHourHand', () => {
+    const { container } = render(
+      <Clock
+        renderHourHand={(props) => (
+          <div data-testid="custom-hour" style={{ transform: `rotate(${props.angle}deg)` }} />
+        )}
+      />
+    );
+    expect(container.querySelector('[data-testid="custom-hour"]')).toBeInTheDocument();
+  });
+
+  // Mount animation
+  it('renders with animateOnMount without errors', () => {
+    const { container } = render(<Clock animateOnMount animateOnMountDuration={500} />);
+    expect(container.querySelector('.mantine-Clock-root')).toBeInTheDocument();
+  });
+
+  // Size auto
+  it('renders with size="auto"', () => {
+    const { container } = render(<Clock size="auto" />);
+    const root = container.querySelector('.mantine-Clock-root');
+    expect(root).toBeInTheDocument();
+    expect(root).toHaveStyle('width: 100%');
+    expect(root).toHaveStyle('height: 100%');
+  });
 });

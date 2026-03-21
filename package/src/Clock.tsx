@@ -20,6 +20,15 @@ import {
   useProps,
   useStyles,
 } from '@mantine/core';
+import { useMergedRef } from '@mantine/hooks';
+import { ClockDigital } from './ClockDigital';
+import {
+  createGeometry,
+  hourAngleFromDate,
+  minuteAngleFromDate,
+  secondAngleFromDate,
+  type ClockGeometry,
+} from './geometry';
 import classes from './Clock.module.css';
 
 // Extend dayjs with timezone support
@@ -69,6 +78,7 @@ export type ClockStylesNames =
   | 'clockContainer'
   | 'glassWrapper'
   | 'clockFace'
+  | 'faceContent'
   | 'hourMarks'
   | 'hourTick'
   | 'minuteTick'
@@ -195,6 +205,78 @@ export interface ClockBaseProps {
 
   /** Custom aria-label for the clock. If not provided, a default label with the current time will be used. */
   ariaLabel?: string;
+
+  /** Shape of the clock face (default: 'circle') */
+  shape?: 'circle' | 'rounded-rect';
+
+  /** Aspect ratio for rounded-rect shape (default: 1, range: 0.6-1.5). Values < 1 = taller, > 1 = wider */
+  aspectRatio?: number;
+
+  /** Border radius in pixels for rounded-rect shape. Default: 20% of shorter side */
+  borderRadius?: number;
+
+  /** Callback fired on each time update with the current time data */
+  onTimeChange?: (time: {
+    hours: number;
+    minutes: number;
+    seconds: number;
+    milliseconds: number;
+  }) => void;
+
+  /** Custom render function for the hour hand */
+  renderHourHand?: (props: HandRenderProps) => React.ReactNode;
+
+  /** Custom render function for the minute hand */
+  renderMinuteHand?: (props: HandRenderProps) => React.ReactNode;
+
+  /** Custom render function for the second hand (including counterweight) */
+  renderSecondHand?: (props: HandRenderProps) => React.ReactNode;
+
+  /** Array of time sectors to display on the clock face */
+  sectors?: ClockSector[];
+
+  /** Custom content rendered on the clock face, between the background and ticks/hands */
+  faceContent?: React.ReactNode;
+
+  /** Animate hands from 12:00 to current time on mount (default: false) */
+  animateOnMount?: boolean;
+
+  /** Duration of mount animation in ms (default: 1000) */
+  animateOnMountDuration?: number;
+}
+
+export interface HandRenderProps {
+  /** Rotation angle in degrees (0 = 12 o'clock) */
+  angle: number;
+  /** Hand length in pixels */
+  length: number;
+  /** Hand width/thickness in pixels */
+  width: number;
+  /** Center X coordinate */
+  centerX: number;
+  /** Center Y coordinate */
+  centerY: number;
+  /** Total clock size in pixels */
+  clockSize: number;
+}
+
+export interface ClockSector {
+  /** Start time (e.g., "09:00" or "09:00:00") */
+  from: string;
+  /** End time (e.g., "10:30") */
+  to: string;
+  /** Sector color (CSS color string, e.g., "#ff0000", "rgb(255,0,0)") */
+  color?: string;
+  /** Sector opacity (0-1) */
+  opacity?: number;
+  /** Label for tooltip/accessibility */
+  label?: string;
+  /** Enable click/hover interactivity */
+  interactive?: boolean;
+  /** Click handler */
+  onClick?: (sector: ClockSector) => void;
+  /** Hover handler */
+  onHover?: (sector: ClockSector, entering: boolean) => void;
 }
 
 export interface ClockArcsProps {
@@ -240,6 +322,9 @@ export type ClockFactory = Factory<{
   ref: HTMLDivElement;
   stylesNames: ClockStylesNames;
   vars: ClockCssVariables;
+  staticComponents: {
+    Digital: typeof ClockDigital;
+  };
 }>;
 
 export const defaultProps: Partial<ClockProps> = {
@@ -287,6 +372,48 @@ const varsResolver = createVarsResolver<ClockFactory>(
       hoursArcColor,
     }
   ) => {
+    // For 'auto' mode, use a fallback; the actual size is set via inline style
+    if (size === 'auto') {
+      return {
+        root: {
+          '--clock-size': '400px',
+          '--clock-color': parseThemeColor({ color: color || '', theme }).value,
+          '--clock-hour-ticks-color': parseThemeColor({ color: hourTicksColor || '', theme }).value,
+          '--clock-hour-ticks-opacity': round2(hourTicksOpacity ?? 1).toString(),
+          '--clock-minute-ticks-color': parseThemeColor({ color: minuteTicksColor || '', theme })
+            .value,
+          '--clock-minute-ticks-opacity': round2(minuteTicksOpacity ?? 1).toString(),
+          '--clock-primary-numbers-color': parseThemeColor({
+            color: primaryNumbersColor || '',
+            theme,
+          }).value,
+          '--clock-primary-numbers-opacity': round2(primaryNumbersOpacity ?? 1).toString(),
+          '--clock-secondary-numbers-color': parseThemeColor({
+            color: secondaryNumbersColor || '',
+            theme,
+          }).value,
+          '--clock-secondary-numbers-opacity': round2(secondaryNumbersOpacity ?? 1).toString(),
+          '--clock-second-hand-color': parseThemeColor({ color: secondHandColor || '', theme })
+            .value,
+          '--clock-minute-hand-color': parseThemeColor({ color: minuteHandColor || '', theme })
+            .value,
+          '--clock-hour-hand-color': parseThemeColor({ color: hourHandColor || '', theme }).value,
+          '--clock-seconds-arc-color': parseThemeColor({
+            color: secondsArcColor || secondHandColor || '',
+            theme,
+          }).value,
+          '--clock-minutes-arc-color': parseThemeColor({
+            color: minutesArcColor || minuteHandColor || '',
+            theme,
+          }).value,
+          '--clock-hours-arc-color': parseThemeColor({
+            color: hoursArcColor || hourHandColor || '',
+            theme,
+          }).value,
+        },
+      };
+    }
+
     const sizeValue = size || 'md';
     const clockSize =
       typeof sizeValue === 'string' && sizeValue in defaultClockSizes
@@ -397,6 +524,7 @@ const parseTimeValue = (value: string | Date | dayjs.Dayjs | undefined): Date | 
 interface ClockFaceStaticProps {
   getStyles: GetStylesApi<ClockFactory>;
   effectiveSize: number;
+  geometry: ClockGeometry;
   hourTicksOpacity?: number;
   minuteTicksOpacity?: number;
   primaryNumbersOpacity?: number;
@@ -410,6 +538,7 @@ const ClockFaceStatic: React.FC<ClockFaceStaticProps> = React.memo(
   ({
     getStyles,
     effectiveSize,
+    geometry,
     hourTicksOpacity,
     minuteTicksOpacity,
     primaryNumbersOpacity,
@@ -426,19 +555,22 @@ const ClockFaceStatic: React.FC<ClockFaceStaticProps> = React.memo(
       <Box {...getStyles('hourMarks')}>
         {/* Hour ticks */}
         {(hourTicksOpacity ?? 1) !== 0 &&
-          Array.from({ length: 12 }, (_, i) => (
-            <Box
-              key={`hour-tick-${i}`}
-              {...getStyles('hourTick', {
-                style: {
-                  top: tickOffset,
-                  left: '50%',
-                  transformOrigin: `50% ${clockRadius - tickOffset}px`,
-                  transform: `translateX(-50%) rotate(${i * 30}deg)`,
-                },
-              })}
-            />
-          ))}
+          Array.from({ length: 12 }, (_, i) => {
+            const pos = geometry.tickPosition(i, 12, tickOffset);
+            return (
+              <Box
+                key={`hour-tick-${i}`}
+                {...getStyles('hourTick', {
+                  style: {
+                    top: pos.y,
+                    left: '50%',
+                    transformOrigin: pos.transformOrigin,
+                    transform: `translateX(-50%) rotate(${pos.angle}deg)`,
+                  },
+                })}
+              />
+            );
+          })}
 
         {/* Minute ticks */}
         {(minuteTicksOpacity ?? 1) !== 0 &&
@@ -448,15 +580,16 @@ const ClockFaceStatic: React.FC<ClockFaceStaticProps> = React.memo(
               return null;
             }
 
+            const pos = geometry.tickPosition(i, 60, tickOffset);
             return (
               <Box
                 key={`minute-tick-${i}`}
                 {...getStyles('minuteTick', {
                   style: {
-                    top: tickOffset,
+                    top: pos.y,
                     left: '50%',
-                    transformOrigin: `50% ${clockRadius - tickOffset}px`,
-                    transform: `translateX(-50%) rotate(${i * 6}deg)`,
+                    transformOrigin: pos.transformOrigin,
+                    transform: `translateX(-50%) rotate(${pos.angle}deg)`,
                   },
                 })}
               />
@@ -466,11 +599,8 @@ const ClockFaceStatic: React.FC<ClockFaceStaticProps> = React.memo(
         {/* Hour numbers - Primary (12, 3, 6, 9) */}
         {(primaryNumbersOpacity ?? 1) !== 0 &&
           [12, 3, 6, 9].map((num) => {
-            // Calculate position based on hour number
-            const i = num === 12 ? 0 : num;
-            const angle = (i * 30 - 90) * (Math.PI / 180); // -90 to start from top (12 o'clock)
-            const x = Math.round(clockRadius + Math.cos(angle) * numberRadius);
-            const y = Math.round(clockRadius + Math.sin(angle) * numberRadius);
+            const hourIndex = num === 12 ? 0 : num;
+            const pos = geometry.numberPosition(hourIndex, numberRadius);
 
             return (
               <Text
@@ -479,8 +609,8 @@ const ClockFaceStatic: React.FC<ClockFaceStaticProps> = React.memo(
                 {...getStyles('primaryNumber', {
                   className: getStyles('number').className,
                   style: {
-                    left: x,
-                    top: y,
+                    left: pos.x,
+                    top: pos.y,
                   },
                 })}
               >
@@ -492,11 +622,7 @@ const ClockFaceStatic: React.FC<ClockFaceStaticProps> = React.memo(
         {/* Hour numbers - Secondary (1, 2, 4, 5, 7, 8, 10, 11) */}
         {(secondaryNumbersOpacity ?? 1) !== 0 &&
           [1, 2, 4, 5, 7, 8, 10, 11].map((num) => {
-            // Calculate position based on hour number
-            const i = num;
-            const angle = (i * 30 - 90) * (Math.PI / 180); // -90 to start from top (12 o'clock)
-            const x = Math.round(clockRadius + Math.cos(angle) * numberRadius);
-            const y = Math.round(clockRadius + Math.sin(angle) * numberRadius);
+            const pos = geometry.numberPosition(num, numberRadius);
 
             return (
               <Text
@@ -505,8 +631,8 @@ const ClockFaceStatic: React.FC<ClockFaceStaticProps> = React.memo(
                 {...getStyles('secondaryNumber', {
                   className: getStyles('number').className,
                   style: {
-                    left: x,
-                    top: y,
+                    left: pos.x,
+                    top: pos.y,
                   },
                 })}
               >
@@ -525,6 +651,7 @@ interface RealClockProps extends ClockBaseProps, ClockArcsProps {
   time: Date;
   getStyles: GetStylesApi<ClockFactory>;
   effectiveSize: number;
+  geometry: ClockGeometry;
 }
 
 /**
@@ -536,6 +663,7 @@ const RealClock: React.FC<RealClockProps> = React.memo((props) => {
     timezone,
     getStyles,
     effectiveSize,
+    geometry,
     hourHandSize,
     minuteHandSize,
     secondHandSize,
@@ -565,6 +693,13 @@ const RealClock: React.FC<RealClockProps> = React.memo((props) => {
     secondsArcOpacity,
     minutesArcOpacity,
     hoursArcOpacity,
+    renderHourHand,
+    renderMinuteHand,
+    renderSecondHand,
+    sectors,
+    faceContent,
+    animateOnMount,
+    animateOnMountDuration,
   } = props;
 
   // Use dayjs to handle timezone conversion
@@ -598,95 +733,54 @@ const RealClock: React.FC<RealClockProps> = React.memo((props) => {
       break;
   }
 
+  // --- Mount animation (Phase 6) ---
+  const [mountPhase, setMountPhase] = useState<'initial' | 'animating' | 'done'>(
+    animateOnMount ? 'initial' : 'done'
+  );
+
+  useEffect(() => {
+    if (mountPhase === 'initial') {
+      // After first render at 0deg, trigger animation to real angles
+      requestAnimationFrame(() => {
+        setMountPhase('animating');
+      });
+    } else if (mountPhase === 'animating') {
+      const timer = setTimeout(
+        () => {
+          setMountPhase('done');
+        },
+        (animateOnMountDuration ?? 1000) + 50
+      );
+      return () => clearTimeout(timer);
+    }
+  }, [mountPhase, animateOnMountDuration]);
+
+  const showTransition = mountPhase === 'animating';
+  const handAngles =
+    mountPhase === 'initial'
+      ? { hour: 0, minute: 0, second: 0 }
+      : { hour: round2(hourAngle), minute: round2(minuteAngle), second: round2(secondAngle) };
+
+  const transitionStyle = showTransition
+    ? {
+        transition: `transform ${animateOnMountDuration ?? 1000}ms cubic-bezier(0.34, 1.56, 0.64, 1)`,
+      }
+    : undefined;
+
   // Use effective size for all calculations to maintain proportions
   const size = effectiveSize;
-  const clockRadius = Math.round(size / 2);
-  const calculatedHourHandLength = Math.round(
-    clockRadius * (hourHandLength ?? defaultProps.hourHandLength!)
+  const clockRadius = geometry.centerX;
+  const calculatedHourHandLength = geometry.handLength(
+    hourHandLength ?? defaultProps.hourHandLength!
   );
-  const calculatedMinuteHandLength = Math.round(
-    clockRadius * (minuteHandLength ?? defaultProps.minuteHandLength!)
+  const calculatedMinuteHandLength = geometry.handLength(
+    minuteHandLength ?? defaultProps.minuteHandLength!
   );
-  const calculatedSecondHandLength = Math.round(
-    clockRadius * (secondHandLength ?? defaultProps.secondHandLength!)
+  const calculatedSecondHandLength = geometry.handLength(
+    secondHandLength ?? defaultProps.secondHandLength!
   );
 
   const centerSize = Math.round(size * CENTER_DOT_RATIO); // Center dot size
-
-  // Helpers to compute angles and SVG path for sectors
-  const toClockAngle = (deg: number) => ((deg % 360) + 360) % 360; // normalize
-
-  const secAngleFromDate = (d: Date | null | undefined) => {
-    if (!d) {
-      return 0;
-    }
-    const dt = timezone && timezone !== '' ? dayjs(d).tz(timezone) : dayjs(d);
-    const s = dt.second();
-    const ms = dt.millisecond();
-    return toClockAngle((s + ms / 1000) * 6);
-  };
-
-  const minAngleFromDate = (d: Date | null | undefined) => {
-    if (!d) {
-      return 0;
-    }
-    const dt = timezone && timezone !== '' ? dayjs(d).tz(timezone) : dayjs(d);
-    const m = dt.minute();
-    return toClockAngle(m * 6);
-  };
-
-  const hourAngleFromDate = (d: Date | null | undefined) => {
-    if (!d) {
-      return 0;
-    }
-    const dt = timezone && timezone !== '' ? dayjs(d).tz(timezone) : dayjs(d);
-    const h = dt.hour() % 12;
-    const m = dt.minute();
-    return toClockAngle(h * 30 + m * 0.5);
-  };
-
-  const describeSector = (
-    cx: number,
-    cy: number,
-    r: number,
-    startDeg: number,
-    endDeg: number,
-    direction: 'clockwise' | 'counterClockwise'
-  ) => {
-    const start = toClockAngle(startDeg);
-    const end = toClockAngle(endDeg);
-
-    // Compute sweep and large-arc-flag based on direction
-    let delta = 0;
-    if (direction === 'clockwise') {
-      delta = end - start;
-      if (delta < 0) {
-        delta += 360;
-      }
-    } else {
-      delta = start - end;
-      if (delta < 0) {
-        delta += 360;
-      }
-    }
-    // Use >= to avoid flipping around 180deg due to floating point noise
-    const largeArc = delta >= 180 ? 1 : 0;
-    const sweep = direction === 'clockwise' ? 1 : 0;
-
-    const aStart = (start * Math.PI) / 180;
-    const aEnd = (end * Math.PI) / 180;
-    // Avoid rounding to integers to prevent jitter; keep subpixel precision
-    const x1 = cx + r * Math.sin(aStart);
-    const y1 = cy - r * Math.cos(aStart);
-    const x2 = cx + r * Math.sin(aEnd);
-    const y2 = cy - r * Math.cos(aEnd);
-
-    // Format numbers to a reasonable precision to keep DOM diffs small
-    const fmt = (n: number) => (Number.isFinite(n) ? n.toFixed(3) : '0');
-
-    // Build sector path: center -> start point -> arc -> center
-    return `M ${fmt(cx)} ${fmt(cy)} L ${fmt(x1)} ${fmt(y1)} A ${fmt(r)} ${fmt(r)} 0 ${largeArc} ${sweep} ${fmt(x2)} ${fmt(y2)} Z`;
-  };
 
   const showSecArc = withSecondsArc === true && (secondsArcOpacity ?? 1) !== 0;
   const showMinArc = withMinutesArc === true && (minutesArcOpacity ?? 1) !== 0;
@@ -698,25 +792,84 @@ const RealClock: React.FC<RealClockProps> = React.memo((props) => {
   );
 
   return (
-    <Box {...getStyles('clockContainer')}>
+    <Box
+      {...getStyles('clockContainer', {
+        style: {
+          width: geometry.width,
+          height: geometry.height,
+        },
+      })}
+    >
       {/* Glass wrapper with shadow */}
       <Box {...getStyles('glassWrapper')}>
         {/* Clock face */}
-        <Box {...getStyles('clockFace')}>
+        <Box
+          {...getStyles('clockFace', {
+            style: {
+              width: geometry.width,
+              height: geometry.height,
+              borderRadius: geometry.borderRadius(),
+              clipPath: geometry.clipPath(),
+            },
+          })}
+        >
+          {/* Custom face content */}
+          {faceContent && <Box {...getStyles('faceContent')}>{faceContent}</Box>}
           {/* Arcs layer (rendered above face, below hands) */}
-          {(showSecArc || showMinArc || showHrArc) && (
+          {(showSecArc || showMinArc || showHrArc || (sectors && sectors.length > 0)) && (
             <svg
-              {...getStyles('arcsLayer', { style: { width: size, height: size } })}
-              viewBox={`0 0 ${size} ${size}`}
+              {...getStyles('arcsLayer', {
+                style: { width: geometry.width, height: geometry.height },
+              })}
+              viewBox={`0 0 ${geometry.width} ${geometry.height}`}
             >
+              {/* Sectors (rendered below arcs) */}
+              {sectors &&
+                sectors.length > 0 &&
+                sectors.map((sector, idx) => {
+                  const fromDate = parseTimeValue(sector.from);
+                  const toDate = parseTimeValue(sector.to);
+                  if (!fromDate || !toDate) {
+                    return null;
+                  }
+
+                  const startAngle = hourAngleFromDate(fromDate, timezone);
+                  const endAngle = hourAngleFromDate(toDate, timezone);
+                  const sectorRadius = calculatedMinuteHandLength;
+
+                  return (
+                    <path
+                      key={`sector-${idx}`}
+                      d={geometry.sectorPath(startAngle, endAngle, sectorRadius, 'clockwise')}
+                      fill={sector.color || 'var(--clock-second-hand-color-resolved)'}
+                      fillOpacity={round2(sector.opacity ?? 0.2)}
+                      style={sector.interactive ? { cursor: 'pointer' } : undefined}
+                      onClick={
+                        sector.interactive && sector.onClick
+                          ? () => sector.onClick!(sector)
+                          : undefined
+                      }
+                      onMouseEnter={
+                        sector.interactive && sector.onHover
+                          ? () => sector.onHover!(sector, true)
+                          : undefined
+                      }
+                      onMouseLeave={
+                        sector.interactive && sector.onHover
+                          ? () => sector.onHover!(sector, false)
+                          : undefined
+                      }
+                    >
+                      {sector.label && <title>{sector.label}</title>}
+                    </path>
+                  );
+                })}
               {showHrArc && (
                 <path
-                  d={describeSector(
-                    clockRadius,
-                    clockRadius,
-                    calculatedHourHandLength,
-                    hourAngleFromDate(parseTimeValue(hoursArcFrom) ?? null),
+                  d={geometry.sectorPath(
+                    hourAngleFromDate(parseTimeValue(hoursArcFrom) ?? null, timezone),
                     hourAngle,
+                    calculatedHourHandLength,
                     hoursArcDirection
                   )}
                   fill="var(--clock-hours-arc-color-resolved)"
@@ -725,12 +878,10 @@ const RealClock: React.FC<RealClockProps> = React.memo((props) => {
               )}
               {showMinArc && (
                 <path
-                  d={describeSector(
-                    clockRadius,
-                    clockRadius,
-                    calculatedMinuteHandLength,
-                    minAngleFromDate(parseTimeValue(minutesArcFrom) ?? null),
+                  d={geometry.sectorPath(
+                    minuteAngleFromDate(parseTimeValue(minutesArcFrom) ?? null, timezone),
                     minuteAngle,
+                    calculatedMinuteHandLength,
                     minutesArcDirection
                   )}
                   fill="var(--clock-minutes-arc-color-resolved)"
@@ -739,12 +890,10 @@ const RealClock: React.FC<RealClockProps> = React.memo((props) => {
               )}
               {showSecArc && (
                 <path
-                  d={describeSector(
-                    clockRadius,
-                    clockRadius,
-                    calculatedSecondHandLength,
-                    secAngleFromDate(parseTimeValue(secondsArcFrom) ?? null),
+                  d={geometry.sectorPath(
+                    secondAngleFromDate(parseTimeValue(secondsArcFrom) ?? null, timezone),
                     secondAngle,
+                    calculatedSecondHandLength,
                     secondsArcDirection
                   )}
                   fill="var(--clock-seconds-arc-color-resolved)"
@@ -757,6 +906,7 @@ const RealClock: React.FC<RealClockProps> = React.memo((props) => {
           <ClockFaceStatic
             getStyles={getStyles}
             effectiveSize={size}
+            geometry={geometry}
             hourTicksOpacity={hourTicksOpacity}
             minuteTicksOpacity={minuteTicksOpacity}
             primaryNumbersOpacity={primaryNumbersOpacity}
@@ -767,89 +917,121 @@ const RealClock: React.FC<RealClockProps> = React.memo((props) => {
           />
 
           {/* Hour hand */}
-          {(hourHandOpacity ?? defaultProps.hourHandOpacity!) !== 0 && (
-            <Box
-              // {...getStyles('hand')}
-              {...getStyles('hand', {
-                className: getStyles('hourHand').className,
-                style: {
-                  width: round2(size * (hourHandSize ?? defaultProps.hourHandSize!)),
-                  height: calculatedHourHandLength,
-                  opacity: round2(hourHandOpacity ?? defaultProps.hourHandOpacity!),
-                  bottom: clockRadius,
-                  left: clockRadius,
-                  marginLeft: round2(-(size * (hourHandSize ?? defaultProps.hourHandSize!)) / 2),
-                  borderRadius: `${round2(size * (hourHandSize ?? defaultProps.hourHandSize!))}px`,
-                  transform: `rotate(${round2(hourAngle)}deg)`,
-                },
-              })}
-            />
-          )}
+          {(hourHandOpacity ?? defaultProps.hourHandOpacity!) !== 0 &&
+            (renderHourHand ? (
+              renderHourHand({
+                angle: handAngles.hour,
+                length: calculatedHourHandLength,
+                width: round2(size * (hourHandSize ?? defaultProps.hourHandSize!)),
+                centerX: geometry.centerX,
+                centerY: geometry.centerY,
+                clockSize: size,
+              })
+            ) : (
+              <Box
+                {...getStyles('hand', {
+                  className: getStyles('hourHand').className,
+                  style: {
+                    width: round2(size * (hourHandSize ?? defaultProps.hourHandSize!)),
+                    height: calculatedHourHandLength,
+                    opacity: round2(hourHandOpacity ?? defaultProps.hourHandOpacity!),
+                    bottom: clockRadius,
+                    left: clockRadius,
+                    marginLeft: round2(-(size * (hourHandSize ?? defaultProps.hourHandSize!)) / 2),
+                    borderRadius: `${round2(size * (hourHandSize ?? defaultProps.hourHandSize!))}px`,
+                    transform: `rotate(${handAngles.hour}deg)`,
+                    ...transitionStyle,
+                  },
+                })}
+              />
+            ))}
 
           {/* Minute hand */}
-          {(minuteHandOpacity ?? defaultProps.minuteHandOpacity!) !== 0 && (
-            <Box
-              {...getStyles('hand', {
-                className: getStyles('minuteHand').className,
-                style: {
-                  width: round2(size * (minuteHandSize ?? defaultProps.minuteHandSize!)),
-                  height: calculatedMinuteHandLength,
-                  opacity: round2(minuteHandOpacity ?? defaultProps.minuteHandOpacity!),
-                  bottom: clockRadius,
-                  left: clockRadius,
-                  marginLeft: round2(
-                    -(size * (minuteHandSize ?? defaultProps.minuteHandSize!)) / 2
-                  ),
-                  borderRadius: `${round2(size * (minuteHandSize ?? defaultProps.minuteHandSize!))}px`,
-                  transform: `rotate(${round2(minuteAngle)}deg)`,
-                },
-              })}
-            />
-          )}
+          {(minuteHandOpacity ?? defaultProps.minuteHandOpacity!) !== 0 &&
+            (renderMinuteHand ? (
+              renderMinuteHand({
+                angle: handAngles.minute,
+                length: calculatedMinuteHandLength,
+                width: round2(size * (minuteHandSize ?? defaultProps.minuteHandSize!)),
+                centerX: geometry.centerX,
+                centerY: geometry.centerY,
+                clockSize: size,
+              })
+            ) : (
+              <Box
+                {...getStyles('hand', {
+                  className: getStyles('minuteHand').className,
+                  style: {
+                    width: round2(size * (minuteHandSize ?? defaultProps.minuteHandSize!)),
+                    height: calculatedMinuteHandLength,
+                    opacity: round2(minuteHandOpacity ?? defaultProps.minuteHandOpacity!),
+                    bottom: clockRadius,
+                    left: clockRadius,
+                    marginLeft: round2(
+                      -(size * (minuteHandSize ?? defaultProps.minuteHandSize!)) / 2
+                    ),
+                    borderRadius: `${round2(size * (minuteHandSize ?? defaultProps.minuteHandSize!))}px`,
+                    transform: `rotate(${handAngles.minute}deg)`,
+                    ...transitionStyle,
+                  },
+                })}
+              />
+            ))}
 
           {/* Second hand container */}
-          {(secondHandOpacity ?? defaultProps.secondHandOpacity!) !== 0 && (
-            <Box
-              {...getStyles('secondHandContainer', {
-                style: {
-                  width: round2(size * (secondHandSize ?? defaultProps.secondHandSize!)),
-                  height: calculatedSecondHandLength,
-                  top: clockRadius - calculatedSecondHandLength,
-                  left: clockRadius,
-                  marginLeft: round2(
-                    -(size * (secondHandSize ?? defaultProps.secondHandSize!)) / 2
-                  ),
-                  transformOrigin: `${round2((size * (secondHandSize ?? defaultProps.secondHandSize!)) / 2)}px ${calculatedSecondHandLength}px`,
-                  transform: `rotate(${round2(secondAngle)}deg)`,
-                },
-              })}
-            >
-              {/* Second hand */}
+          {(secondHandOpacity ?? defaultProps.secondHandOpacity!) !== 0 &&
+            (renderSecondHand ? (
+              renderSecondHand({
+                angle: handAngles.second,
+                length: calculatedSecondHandLength,
+                width: round2(size * (secondHandSize ?? defaultProps.secondHandSize!)),
+                centerX: geometry.centerX,
+                centerY: geometry.centerY,
+                clockSize: size,
+              })
+            ) : (
               <Box
-                {...getStyles('secondHand', {
+                {...getStyles('secondHandContainer', {
                   style: {
                     width: round2(size * (secondHandSize ?? defaultProps.secondHandSize!)),
                     height: calculatedSecondHandLength,
-                    opacity: round2(secondHandOpacity ?? defaultProps.secondHandOpacity!),
-                  },
-                })}
-              />
-
-              {/* Second hand counterweight (B3) */}
-              <Box
-                {...getStyles('secondHandCounterweight', {
-                  style: {
-                    width: counterweightWidth,
-                    opacity: round2(secondHandOpacity ?? defaultProps.secondHandOpacity!),
-                    left: Math.round(
-                      (size * (secondHandSize ?? defaultProps.secondHandSize!)) / 2 -
-                        counterweightWidth / 2
+                    top: clockRadius - calculatedSecondHandLength,
+                    left: clockRadius,
+                    marginLeft: round2(
+                      -(size * (secondHandSize ?? defaultProps.secondHandSize!)) / 2
                     ),
+                    transformOrigin: `${round2((size * (secondHandSize ?? defaultProps.secondHandSize!)) / 2)}px ${calculatedSecondHandLength}px`,
+                    transform: `rotate(${handAngles.second}deg)`,
+                    ...transitionStyle,
                   },
                 })}
-              />
-            </Box>
-          )}
+              >
+                {/* Second hand */}
+                <Box
+                  {...getStyles('secondHand', {
+                    style: {
+                      width: round2(size * (secondHandSize ?? defaultProps.secondHandSize!)),
+                      height: calculatedSecondHandLength,
+                      opacity: round2(secondHandOpacity ?? defaultProps.secondHandOpacity!),
+                    },
+                  })}
+                />
+
+                {/* Second hand counterweight (B3) */}
+                <Box
+                  {...getStyles('secondHandCounterweight', {
+                    style: {
+                      width: counterweightWidth,
+                      opacity: round2(secondHandOpacity ?? defaultProps.secondHandOpacity!),
+                      left: Math.round(
+                        (size * (secondHandSize ?? defaultProps.secondHandSize!)) / 2 -
+                          counterweightWidth / 2
+                      ),
+                    },
+                  })}
+                />
+              </Box>
+            ))}
 
           {/* Center blur */}
           <Box {...getStyles('centerBlur')} />
@@ -882,6 +1064,14 @@ export const Clock = factory<ClockFactory>((_props, ref) => {
   const rafRef = useRef<number | null>(null);
   const startTimeRef = useRef<Date | null>(null);
   const realStartTimeRef = useRef<Date | null>(null);
+  const onTimeChangeRef = useRef(_props.onTimeChange);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [measuredSize, setMeasuredSize] = useState<number | null>(null);
+  const mergedRef = useMergedRef(ref, containerRef);
+
+  useEffect(() => {
+    onTimeChangeRef.current = _props.onTimeChange;
+  }, [_props.onTimeChange]);
 
   const {
     // Clock-specific props that should not be passed to DOM
@@ -930,6 +1120,17 @@ export const Clock = factory<ClockFactory>((_props, ref) => {
     hoursArcDirection,
     hoursArcColor,
     hoursArcOpacity,
+    sectors,
+    faceContent,
+    animateOnMount,
+    animateOnMountDuration,
+    shape,
+    aspectRatio,
+    borderRadius,
+    onTimeChange,
+    renderHourHand,
+    renderMinuteHand,
+    renderSecondHand,
     // Styles API props
     classNames,
     style,
@@ -953,20 +1154,51 @@ export const Clock = factory<ClockFactory>((_props, ref) => {
     varsResolver,
   });
 
-  const effectiveSize = Math.round(
-    px(
-      getSize(
-        typeof size === 'string' && size in defaultClockSizes
-          ? defaultClockSizes[size as keyof typeof defaultClockSizes]
-          : size || defaultProps.size!,
-        'clock-size'
-      )
-    ) as number
-  );
+  const effectiveSize =
+    size === 'auto'
+      ? (measuredSize ?? 400)
+      : Math.round(
+          px(
+            getSize(
+              typeof size === 'string' && size in defaultClockSizes
+                ? defaultClockSizes[size as keyof typeof defaultClockSizes]
+                : size || defaultProps.size!,
+              'clock-size'
+            )
+          ) as number
+        );
+
+  const geometry = createGeometry(effectiveSize, shape, { aspectRatio, borderRadius });
 
   useEffect(() => {
     setHasMounted(true);
   }, []);
+
+  // ResizeObserver for auto sizing
+  useEffect(() => {
+    if (size !== 'auto' || !hasMounted) {
+      return;
+    }
+
+    const element = containerRef.current;
+    if (!element) {
+      return;
+    }
+
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (entry) {
+        const { width, height } = entry.contentRect;
+        const newSize = Math.round(Math.min(width, height));
+        if (newSize > 0) {
+          setMeasuredSize(newSize);
+        }
+      }
+    });
+
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [size, hasMounted]);
 
   // Calculate the effective time to display
   const getEffectiveTime = (): Date => {
@@ -1019,8 +1251,22 @@ export const Clock = factory<ClockFactory>((_props, ref) => {
       realStartTimeRef.current = null;
     }
 
+    const fireOnTimeChange = (now: Date) => {
+      if (onTimeChangeRef.current) {
+        const tz = timezone && timezone !== '' ? dayjs(now).tz(timezone) : dayjs(now);
+        onTimeChangeRef.current({
+          hours: tz.hour(),
+          minutes: tz.minute(),
+          seconds: tz.second(),
+          milliseconds: tz.millisecond(),
+        });
+      }
+    };
+
     const updateTime = () => {
-      setTime(new Date());
+      const now = new Date();
+      setTime(now);
+      fireOnTimeChange(now);
     };
 
     updateTime();
@@ -1028,7 +1274,9 @@ export const Clock = factory<ClockFactory>((_props, ref) => {
     // P1: Use requestAnimationFrame for smooth mode
     if (secondHandBehavior === 'smooth') {
       const animate = () => {
-        setTime(new Date());
+        const now = new Date();
+        setTime(now);
+        fireOnTimeChange(now);
         rafRef.current = requestAnimationFrame(animate);
       };
       animate();
@@ -1064,20 +1312,44 @@ export const Clock = factory<ClockFactory>((_props, ref) => {
   if (!hasMounted) {
     return (
       <Box
-        {...getStyles('root')}
-        ref={ref}
+        {...getStyles('root', {
+          style:
+            size === 'auto'
+              ? { width: '100%', height: '100%', '--clock-size': `${effectiveSize}px` }
+              : { width: geometry.width, height: geometry.height },
+        })}
+        ref={mergedRef}
         role="img"
         aria-label={ariaLabel || 'Clock'}
         {...others}
       >
         {/* Render static clock structure during SSR */}
-        <Box {...getStyles('clockContainer')}>
+        <Box
+          {...getStyles('clockContainer', {
+            style: {
+              width: geometry.width,
+              height: geometry.height,
+            },
+          })}
+        >
           <Box {...getStyles('glassWrapper')}>
-            <Box {...getStyles('clockFace')}>
+            <Box
+              {...getStyles('clockFace', {
+                style: {
+                  width: geometry.width,
+                  height: geometry.height,
+                  borderRadius: geometry.borderRadius(),
+                  clipPath: geometry.clipPath(),
+                },
+              })}
+            >
+              {/* Custom face content */}
+              {faceContent && <Box {...getStyles('faceContent')}>{faceContent}</Box>}
               {/* Static hour marks and numbers only — shared ClockFaceStatic */}
               <ClockFaceStatic
                 getStyles={getStyles}
                 effectiveSize={effectiveSize}
+                geometry={geometry}
                 hourTicksOpacity={hourTicksOpacity}
                 minuteTicksOpacity={minuteTicksOpacity}
                 primaryNumbersOpacity={primaryNumbersOpacity}
@@ -1103,16 +1375,65 @@ export const Clock = factory<ClockFactory>((_props, ref) => {
     `Clock showing ${String(timezoneTime.hour()).padStart(2, '0')}:${String(timezoneTime.minute()).padStart(2, '0')}:${String(timezoneTime.second()).padStart(2, '0')}`;
 
   return (
-    <Box {...getStyles('root')} ref={ref} role="img" aria-label={computedAriaLabel} {...others}>
+    <Box
+      {...getStyles('root', {
+        style:
+          size === 'auto'
+            ? { width: '100%', height: '100%', '--clock-size': `${effectiveSize}px` }
+            : { width: geometry.width, height: geometry.height },
+      })}
+      ref={mergedRef}
+      role="img"
+      aria-label={computedAriaLabel}
+      {...others}
+    >
       <RealClock
         time={effectiveTime}
         getStyles={getStyles}
         effectiveSize={effectiveSize}
-        {...props}
+        geometry={geometry}
+        timezone={timezone}
+        hourHandSize={hourHandSize}
+        minuteHandSize={minuteHandSize}
+        secondHandSize={secondHandSize}
+        hourHandLength={hourHandLength}
+        minuteHandLength={minuteHandLength}
+        secondHandLength={secondHandLength}
+        secondHandBehavior={secondHandBehavior}
+        secondHandOpacity={secondHandOpacity}
+        minuteHandOpacity={minuteHandOpacity}
+        hourHandOpacity={hourHandOpacity}
+        hourTicksOpacity={hourTicksOpacity}
+        minuteTicksOpacity={minuteTicksOpacity}
+        primaryNumbersOpacity={primaryNumbersOpacity}
+        secondaryNumbersOpacity={secondaryNumbersOpacity}
+        hourNumbersDistance={hourNumbersDistance}
+        primaryNumbersProps={primaryNumbersProps}
+        secondaryNumbersProps={secondaryNumbersProps}
+        withSecondsArc={withSecondsArc}
+        secondsArcFrom={secondsArcFrom}
+        secondsArcDirection={secondsArcDirection}
+        secondsArcOpacity={secondsArcOpacity}
+        withMinutesArc={withMinutesArc}
+        minutesArcFrom={minutesArcFrom}
+        minutesArcDirection={minutesArcDirection}
+        minutesArcOpacity={minutesArcOpacity}
+        withHoursArc={withHoursArc}
+        hoursArcFrom={hoursArcFrom}
+        hoursArcDirection={hoursArcDirection}
+        hoursArcOpacity={hoursArcOpacity}
+        sectors={sectors}
+        faceContent={faceContent}
+        animateOnMount={animateOnMount}
+        animateOnMountDuration={animateOnMountDuration}
+        renderHourHand={renderHourHand}
+        renderMinuteHand={renderMinuteHand}
+        renderSecondHand={renderSecondHand}
       />
     </Box>
   );
 });
 
+Clock.Digital = ClockDigital;
 Clock.classes = classes;
 Clock.displayName = 'Clock';

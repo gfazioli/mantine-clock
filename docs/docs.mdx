@@ -85,14 +85,6 @@ export const hooksData = {
         required: false,
         defaultValue: { value: '1000' },
       },
-      use24Hours: {
-        name: 'use24Hours',
-        type: { name: 'boolean' },
-        description:
-          'Whether to use 24-hour format or 12-hour format',
-        required: false,
-        defaultValue: { value: 'true' },
-      },
       padSeconds: {
         name: 'padSeconds',
         type: { name: 'boolean' },
@@ -114,6 +106,14 @@ export const hooksData = {
         type: { name: 'boolean' },
         description:
           'Whether to pad single-digit hours with a leading zero',
+        required: false,
+        defaultValue: { value: 'false' },
+      },
+      padDays: {
+        name: 'padDays',
+        type: { name: 'boolean' },
+        description:
+          'Whether to pad single-digit days with a leading zero',
         required: false,
         defaultValue: { value: 'false' },
       },
@@ -198,7 +198,7 @@ export const hooksData = {
       },
       hours: {
         name: 'hours',
-        type: { name: 'number | string' },
+        type: { name: 'number' },
         description:
           'The current hour (adjusted for 12/24-hour format)',
         required: true,
@@ -206,15 +206,38 @@ export const hooksData = {
       },
       minutes: {
         name: 'minutes',
-        type: { name: 'number | string' },
+        type: { name: 'number' },
         description: 'The current minute',
         required: true,
         defaultValue: null,
       },
       seconds: {
         name: 'seconds',
-        type: { name: 'number | string' },
+        type: { name: 'number' },
         description: 'The current second',
+        required: true,
+        defaultValue: null,
+      },
+      formattedHours: {
+        name: 'formattedHours',
+        type: { name: 'string' },
+        description: 'Formatted hour string with padding if enabled',
+        required: true,
+        defaultValue: null,
+      },
+      formattedMinutes: {
+        name: 'formattedMinutes',
+        type: { name: 'string' },
+        description:
+          'Formatted minute string with padding if enabled',
+        required: true,
+        defaultValue: null,
+      },
+      formattedSeconds: {
+        name: 'formattedSeconds',
+        type: { name: 'string' },
+        description:
+          'Formatted second string with padding if enabled',
         required: true,
         defaultValue: null,
       },
@@ -238,13 +261,6 @@ export const hooksData = {
         type: { name: 'boolean' },
         description:
           'Whether the clock is currently running and updating',
-        required: true,
-        defaultValue: null,
-      },
-      start: {
-        name: 'start',
-        type: { name: 'function' },
-        description: 'Function to start the clock',
         required: true,
         defaultValue: null,
       },
@@ -274,59 +290,30 @@ export const hooksData = {
   },
   useClockCountDownReturns: {
     props: {
-      year: {
-        name: 'year',
-        type: { name: 'number' },
-        description: 'The remaining years',
-        required: true,
-        defaultValue: null,
-      },
-      month: {
-        name: 'month',
-        type: { name: 'number' },
-        description: 'The remaining months (1-12)',
-        required: true,
-        defaultValue: null,
-      },
-      day: {
-        name: 'day',
+      days: {
+        name: 'days',
         type: { name: 'number' },
         description: 'The remaining days',
         required: true,
         defaultValue: null,
       },
-      week: {
-        name: 'week',
-        type: { name: 'number' },
-        description: 'The remaining weeks',
-        required: true,
-        defaultValue: null,
-      },
-      isLeap: {
-        name: 'isLeap',
-        type: { name: 'boolean' },
-        description: 'Whether the target year is a leap year',
-        required: true,
-        defaultValue: null,
-      },
       hours: {
         name: 'hours',
-        type: { name: 'number | string' },
-        description:
-          'The remaining hours (adjusted for 12/24-hour format)',
+        type: { name: 'number' },
+        description: 'The remaining hours',
         required: true,
         defaultValue: null,
       },
       minutes: {
         name: 'minutes',
-        type: { name: 'number | string' },
+        type: { name: 'number' },
         description: 'The remaining minutes',
         required: true,
         defaultValue: null,
       },
       seconds: {
         name: 'seconds',
-        type: { name: 'number | string' },
+        type: { name: 'number' },
         description: 'The remaining seconds',
         required: true,
         defaultValue: null,
@@ -338,11 +325,10 @@ export const hooksData = {
         required: true,
         defaultValue: null,
       },
-      amPm: {
-        name: 'amPm',
-        type: { name: "'AM' | 'PM' | undefined" },
-        description:
-          'Whether the time is AM or PM (only when use24Hours is false)',
+      totalMilliseconds: {
+        name: 'totalMilliseconds',
+        type: { name: 'number' },
+        description: 'Total remaining time in milliseconds',
         required: true,
         defaultValue: null,
       },
@@ -361,17 +347,31 @@ export const hooksData = {
         required: true,
         defaultValue: null,
       },
-      totalMilliseconds: {
-        name: 'totalMilliseconds',
-        type: { name: 'number' },
-        description: 'Total remaining time in milliseconds',
+      formattedDays: {
+        name: 'formattedDays',
+        type: { name: 'string' },
+        description: 'Formatted days with padding',
         required: true,
         defaultValue: null,
       },
-      start: {
-        name: 'start',
-        type: { name: 'function' },
-        description: 'Function to start the countdown',
+      formattedHours: {
+        name: 'formattedHours',
+        type: { name: 'string' },
+        description: 'Formatted hours with padding',
+        required: true,
+        defaultValue: null,
+      },
+      formattedMinutes: {
+        name: 'formattedMinutes',
+        type: { name: 'string' },
+        description: 'Formatted minutes with padding',
+        required: true,
+        defaultValue: null,
+      },
+      formattedSeconds: {
+        name: 'formattedSeconds',
+        type: { name: 'string' },
+        description: 'Formatted seconds with padding',
         required: true,
         defaultValue: null,
       },
@@ -651,3 +651,109 @@ The hook returns an object with the following properties:
 This demo showcases how to create a reverse countdown clock by combining the `Clock` component with the `useClockCountDown` hook. The clock displays the remaining time visually as it counts down, creating a unique reverse clock effect. The clock hands move backwards as time decreases, and the appearance changes when the countdown is completed.
 
 <Demo data={demos.reverseCountdown} />
+
+## Clock.Digital
+
+The `Clock.Digital` compound component renders a digital clock display. It supports timezone, 12/24-hour format, AM/PM indicator, date display, custom separators, and Mantine size tokens.
+
+<Demo data={demos.digital} />
+
+## Clock Shapes
+
+By default the `Clock` renders as a circle. You can switch to a rounded-rectangle shape (Apple Watch style) using the `shape` prop. Control the corner radius with `borderRadius` and the vertical stretch with `aspectRatio`.
+
+<Demo data={demos.shapes} />
+
+## Face Content
+
+Use the `faceContent` prop to render arbitrary React content at the centre of the clock face. This is useful for brand logos, labels, or additional information.
+
+<Demo data={demos.faceContentDemo} />
+
+## Time Sectors
+
+The `sectors` prop accepts an array of time ranges that are rendered as coloured arcs on the clock face. Each sector has `from` and `to` times (in `"HH:MM"` format), a `color`, and an optional `label`.
+
+<Demo data={demos.sectorsDemo} />
+
+## Mount Animation
+
+The `Clock` component supports an entrance animation when it first mounts. Enable it with the `withMountAnimation` prop. You can control the animation duration with `mountAnimationDuration` (in milliseconds).
+
+```tsx
+import { Clock } from '@gfazioli/mantine-clock';
+
+function Demo() {
+  return (
+    <Clock
+      size={300}
+      withMountAnimation
+      mountAnimationDuration={800}
+    />
+  );
+}
+```
+
+## Custom Hand Rendering
+
+For full control over how hands are drawn, use the `renderHourHand`, `renderMinuteHand`, and `renderSecondHand` render props. Each receives `{ angle, length, center }` and must return an SVG element.
+
+```tsx
+import { Clock } from '@gfazioli/mantine-clock';
+
+function Demo() {
+  return (
+    <Clock
+      size={300}
+      renderSecondHand={({ angle, length, center }) => (
+        <line
+          x1={center}
+          y1={center}
+          x2={center + length * Math.sin((angle * Math.PI) / 180)}
+          y2={center - length * Math.cos((angle * Math.PI) / 180)}
+          stroke="red"
+          strokeWidth={1}
+          strokeLinecap="round"
+        />
+      )}
+    />
+  );
+}
+```
+
+## Responsive Size
+
+The `size` prop accepts any valid CSS value, including responsive values via Mantine's `rem()` or viewport units. This makes it easy to build clocks that scale with the viewport.
+
+```tsx
+import { Clock } from '@gfazioli/mantine-clock';
+
+function Demo() {
+  return <Clock size="min(300px, 50vw)" />;
+}
+```
+
+## onTimeChange Callback
+
+The `onTimeChange` callback fires on every tick with the current time data. This is useful for synchronising external state or triggering side effects based on the displayed time.
+
+```tsx
+import { useState } from 'react';
+import { Clock } from '@gfazioli/mantine-clock';
+
+function Demo() {
+  const [time, setTime] = useState('');
+
+  return (
+    <>
+      <Clock
+        size={200}
+        onTimeChange={({ hours, minutes, seconds }) => {
+          setTime(`${hours}:${minutes}:${seconds}`);
+        }}
+      />
+      <p>Current time: {time}</p>
+    </>
+  );
+}
+```
