@@ -235,9 +235,9 @@ export function MultipleClocks() {
         <Button
           onClick={() => {
             if (allStopped) {
-              utcClock.start();
-              nyClock.start();
-              tokyoClock.start();
+              utcClock.resume();
+              nyClock.resume();
+              tokyoClock.resume();
             } else {
               utcClock.pause();
               nyClock.pause();

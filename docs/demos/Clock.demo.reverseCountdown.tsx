@@ -27,7 +27,7 @@ function Demo() {
   });
 
   // Format the countdown time for the Clock component
-  const countdownValue = \`\${countdown.hours}:\${countdown.minutes}:\${countdown.seconds}\`;
+  const countdownValue = \`\${countdown.formattedHours}:\${countdown.formattedMinutes}:\${countdown.formattedSeconds}\`;
 
   return (
     <Paper p="md" withBorder>
@@ -83,16 +83,16 @@ function Demo() {
 
           <Text fw={700} size="lg" ta="center" 
                 c={countdown.isCompleted ? 'red' : countdown.totalMilliseconds < 10000 ? 'orange' : undefined}>
-            {countdown.hours}:{countdown.minutes}:{countdown.seconds}
+            {countdown.formattedHours}:{countdown.formattedMinutes}:{countdown.formattedSeconds}
           </Text>
-          
+
           <Text size="sm" c="dimmed" ta="center">
             Status: {countdown.isCompleted ? 'Completed!' : countdown.isRunning ? 'Running...' : 'Paused'}
           </Text>
 
           <Group justify="center" gap="sm">
             <Button 
-              onClick={countdown.start} 
+              onClick={countdown.resume} 
               disabled={countdown.isRunning || countdown.isCompleted}
               variant="filled"
             >
@@ -146,7 +146,7 @@ function Demo() {
   });
 
   // Format the countdown time for the Clock component
-  const countdownValue = `${countdown.hours}:${countdown.minutes}:${countdown.seconds}`;
+  const countdownValue = `${countdown.formattedHours}:${countdown.formattedMinutes}:${countdown.formattedSeconds}`;
 
   return (
     <Paper p="md" withBorder>
@@ -212,7 +212,7 @@ function Demo() {
                   : undefined
             }
           >
-            {countdown.hours}:{countdown.minutes}:{countdown.seconds}
+            {countdown.formattedHours}:{countdown.formattedMinutes}:{countdown.formattedSeconds}
           </Text>
 
           <Text size="sm" c="dimmed" ta="center">
@@ -222,7 +222,7 @@ function Demo() {
 
           <Group justify="center" gap="sm">
             <Button
-              onClick={countdown.start}
+              onClick={countdown.resume}
               disabled={countdown.isRunning || countdown.isCompleted}
               variant="filled"
             >

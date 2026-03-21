@@ -40,7 +40,7 @@ function Demo() {
     <Paper p="md" withBorder style={{ textAlign: 'center' }}>
       <Title order={5} mb="xs">{city}</Title>
       <Text fw={700} size="lg">
-        {clock.hours}:{clock.minutes}:{clock.seconds} {clock.amPm}
+        {clock.formattedHours}:{clock.formattedMinutes}:{clock.formattedSeconds} {clock.amPm}
       </Text>
       <Text size="sm" c="dimmed">
         {clock.day}/{clock.month}/{clock.year}
@@ -97,7 +97,7 @@ function Demo() {
         {city}
       </Title>
       <Text fw={700} size="lg">
-        {clock.hours}:{clock.minutes}:{clock.seconds} {clock.amPm}
+        {clock.formattedHours}:{clock.formattedMinutes}:{clock.formattedSeconds} {clock.amPm}
       </Text>
       <Text size="sm" c="dimmed">
         {clock.day}/{clock.month}/{clock.year}

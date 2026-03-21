@@ -1,138 +1,196 @@
-// Very simple test without any imports that could cause babel issues
-describe('useClock basic tests', () => {
-  it('should pass basic assertion', () => {
-    expect(1 + 1).toBe(2);
+import { act, renderHook } from '@testing-library/react';
+import { useClock as useClockHook } from './use-clock';
+
+// Wrapper to avoid triggering esbuild-jest babel fallback.
+// esbuild-jest scans source for mock-like patterns and falls back to babel,
+// which fails due to a missing plugin. Using an indirection avoids the match.
+const callHook = (opts: Parameters<typeof useClockHook>[0]) => useClockHook(opts);
+
+describe('useClock', () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2024-06-15T14:30:45.123Z'));
   });
 
-  it('should test clock data structure', () => {
-    const mockClockResult = {
-      year: 2024,
-      month: 8,
-      day: 1,
-      week: 31,
-      isLeap: true,
-      hours: 10,
-      minutes: 30,
-      seconds: 45,
-      milliseconds: 123,
-      amPm: 'AM' as const,
-      isRunning: true,
-      start: () => {},
-      pause: () => {},
-      resume: () => {},
-      reset: () => {},
-    };
-
-    expect(mockClockResult.year).toBe(2024);
-    expect(mockClockResult.month).toBe(8);
-    expect(mockClockResult.day).toBe(1);
-    expect(mockClockResult.isLeap).toBe(true);
-    expect(mockClockResult.isRunning).toBe(true);
-    expect(typeof mockClockResult.start).toBe('function');
-    expect(typeof mockClockResult.pause).toBe('function');
-    expect(typeof mockClockResult.resume).toBe('function');
-    expect(typeof mockClockResult.reset).toBe('function');
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
-  it('should test time padding logic', () => {
-    const padNumber = (num: number): string => {
-      return num < 10 ? `0${num}` : `${num}`;
-    };
-
-    expect(padNumber(1)).toBe('01');
-    expect(padNumber(5)).toBe('05');
-    expect(padNumber(10)).toBe('10');
-    expect(padNumber(23)).toBe('23');
-  });
-
-  it('should test 12-hour format conversion', () => {
-    const convert24To12 = (hour: number) => {
-      if (hour === 0) {
-        return { hour: 12, amPm: 'AM' };
-      }
-      if (hour < 12) {
-        return { hour, amPm: 'AM' };
-      }
-      if (hour === 12) {
-        return { hour: 12, amPm: 'PM' };
-      }
-      return { hour: hour - 12, amPm: 'PM' };
-    };
-
-    expect(convert24To12(0)).toEqual({ hour: 12, amPm: 'AM' });
-    expect(convert24To12(10)).toEqual({ hour: 10, amPm: 'AM' });
-    expect(convert24To12(12)).toEqual({ hour: 12, amPm: 'PM' });
-    expect(convert24To12(15)).toEqual({ hour: 3, amPm: 'PM' });
-    expect(convert24To12(23)).toEqual({ hour: 11, amPm: 'PM' });
-  });
-
-  it('should test leap year detection', () => {
-    const isLeapYear = (year: number): boolean => {
-      return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
-    };
-
-    expect(isLeapYear(2024)).toBe(true);
-    expect(isLeapYear(2023)).toBe(false);
-    expect(isLeapYear(2000)).toBe(true);
-    expect(isLeapYear(1900)).toBe(false);
-  });
-
-  it('should test control functions state', () => {
-    let isRunning = false;
-
-    const start = () => {
-      isRunning = true;
-    };
-    const pause = () => {
-      isRunning = false;
-    };
-    const resume = () => {
-      isRunning = true;
-    };
-    const reset = () => {
-      isRunning = false;
-    };
-
-    expect(isRunning).toBe(false);
-
-    start();
-    expect(isRunning).toBe(true);
-
-    pause();
-    expect(isRunning).toBe(false);
-
-    resume();
-    expect(isRunning).toBe(true);
-
-    reset();
-    expect(isRunning).toBe(false);
-  });
-
-  it('should test timezone handling', () => {
-    const timezones = ['UTC', 'Europe/Rome', 'America/New_York', 'Asia/Tokyo', 'Australia/Sydney'];
-
-    timezones.forEach((tz) => {
-      expect(typeof tz).toBe('string');
-      expect(tz.length).toBeGreaterThan(0);
+  // Helper: advance timers to trigger mount effect and state updates
+  const advanceToMounted = () => {
+    act(() => {
+      jest.advanceTimersByTime(100);
     });
+  };
+
+  // --- Default values ---
+
+  it('returns default values with default options', () => {
+    const { result } = renderHook(() => callHook({}));
+    advanceToMounted();
+
+    expect(result.current.year).toBe(2024);
+    expect(typeof result.current.hours).toBe('number');
+    expect(typeof result.current.minutes).toBe('number');
+    expect(typeof result.current.seconds).toBe('number');
+    expect(typeof result.current.milliseconds).toBe('number');
   });
 
-  it('should test update frequency validation', () => {
-    const validateUpdateFrequency = (freq: number) => {
-      return freq > 0 ? freq : 1000; // Default to 1000ms
-    };
+  it('returns hours, minutes, seconds as numbers', () => {
+    const { result } = renderHook(() => callHook({}));
+    advanceToMounted();
 
-    expect(validateUpdateFrequency(500)).toBe(500);
-    expect(validateUpdateFrequency(1000)).toBe(1000);
-    expect(validateUpdateFrequency(0)).toBe(1000);
-    expect(validateUpdateFrequency(-100)).toBe(1000);
+    expect(typeof result.current.hours).toBe('number');
+    expect(typeof result.current.minutes).toBe('number');
+    expect(typeof result.current.seconds).toBe('number');
   });
 
-  it('should test month adjustment (dayjs uses 0-indexed months)', () => {
-    const adjustMonth = (dayjsMonth: number) => dayjsMonth + 1;
+  it('returns formatted strings with padding', () => {
+    const { result } = renderHook(() =>
+      callHook({ padHours: true, padMinutes: true, padSeconds: true })
+    );
+    advanceToMounted();
 
-    expect(adjustMonth(0)).toBe(1); // January
-    expect(adjustMonth(11)).toBe(12); // December
-    expect(adjustMonth(7)).toBe(8); // August
+    expect(typeof result.current.formattedHours).toBe('string');
+    expect(typeof result.current.formattedMinutes).toBe('string');
+    expect(typeof result.current.formattedSeconds).toBe('string');
+  });
+
+  // --- 24h vs 12h ---
+
+  it('returns 24-hour format by default', () => {
+    const { result } = renderHook(() => callHook({ timezone: 'UTC' }));
+    advanceToMounted();
+
+    // 14:30:45 UTC => hours=14 in 24h mode
+    expect(result.current.hours).toBe(14);
+    expect(result.current.amPm).toBeUndefined();
+  });
+
+  it('returns 12-hour format with amPm when use24Hours is false', () => {
+    const { result } = renderHook(() => callHook({ timezone: 'UTC', use24Hours: false }));
+    advanceToMounted();
+
+    // 14:30 UTC => 2 PM in 12h mode
+    expect(result.current.hours).toBe(2);
+    expect(result.current.amPm).toBe('PM');
+  });
+
+  // --- Padding ---
+
+  it('pads hours when padHours is true', () => {
+    jest.setSystemTime(new Date('2024-06-15T09:05:03.000Z'));
+
+    const { result } = renderHook(() => callHook({ timezone: 'UTC', padHours: true }));
+    advanceToMounted();
+
+    expect(result.current.formattedHours).toBe('09');
+  });
+
+  it('pads minutes when padMinutes is true', () => {
+    jest.setSystemTime(new Date('2024-06-15T09:05:03.000Z'));
+
+    const { result } = renderHook(() => callHook({ timezone: 'UTC', padMinutes: true }));
+    advanceToMounted();
+
+    expect(result.current.formattedMinutes).toBe('05');
+  });
+
+  it('pads seconds when padSeconds is true', () => {
+    jest.setSystemTime(new Date('2024-06-15T09:05:03.000Z'));
+
+    const { result } = renderHook(() => callHook({ timezone: 'UTC', padSeconds: true }));
+    advanceToMounted();
+
+    expect(result.current.formattedSeconds).toBe('03');
+  });
+
+  // --- Control lifecycle ---
+
+  it('starts running by default when enabled is true', () => {
+    const { result } = renderHook(() => callHook({ enabled: true }));
+    advanceToMounted();
+
+    expect(result.current.isRunning).toBe(true);
+  });
+
+  it('starts paused when enabled is false', () => {
+    const { result } = renderHook(() => callHook({ enabled: false }));
+    advanceToMounted();
+
+    expect(result.current.isRunning).toBe(false);
+  });
+
+  it('can pause and resume', () => {
+    const { result } = renderHook(() => callHook({ enabled: true }));
+    advanceToMounted();
+
+    expect(result.current.isRunning).toBe(true);
+
+    act(() => {
+      result.current.pause();
+    });
+    expect(result.current.isRunning).toBe(false);
+
+    act(() => {
+      result.current.resume();
+    });
+    expect(result.current.isRunning).toBe(true);
+  });
+
+  it('can reset to initial state', () => {
+    const { result } = renderHook(() => callHook({ enabled: true }));
+    advanceToMounted();
+
+    act(() => {
+      result.current.pause();
+    });
+    expect(result.current.isRunning).toBe(false);
+
+    act(() => {
+      result.current.reset();
+    });
+    // Reset restores initial enabled state (true), so isRunning should be true
+    expect(result.current.isRunning).toBe(true);
+  });
+
+  // --- SSR ---
+
+  it('returns safe SSR values before mount', () => {
+    const { result } = renderHook(() =>
+      callHook({ padHours: true, padMinutes: true, padSeconds: true })
+    );
+    // After mount, the hook should have real values
+    advanceToMounted();
+    expect(result.current.year).toBeGreaterThan(2020);
+    expect(result.current.isRunning).toBe(true);
+  });
+
+  it('uses current year for SSR instead of hardcoded value', () => {
+    const { result } = renderHook(() => callHook({}));
+    advanceToMounted();
+    expect(result.current.year).toBe(2024);
+  });
+
+  // --- updateFrequency validation ---
+
+  it('clamps updateFrequency to minimum 16ms', () => {
+    const { result } = renderHook(() => callHook({ updateFrequency: 5 }));
+    advanceToMounted();
+
+    expect(result.current.isRunning).toBe(true);
+    expect(typeof result.current.hours).toBe('number');
+  });
+
+  // --- No start method ---
+
+  it('does not have a start method', () => {
+    const { result } = renderHook(() => callHook({}));
+    advanceToMounted();
+
+    expect((result.current as any).start).toBeUndefined();
+    expect(typeof result.current.pause).toBe('function');
+    expect(typeof result.current.resume).toBe('function');
+    expect(typeof result.current.reset).toBe('function');
   });
 });

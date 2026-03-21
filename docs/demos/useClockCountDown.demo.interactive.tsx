@@ -32,7 +32,7 @@ function Demo() {
       
       <Text fw={700} size="xl" ta="center" mb="md" 
             c={countdown.isCompleted ? 'red' : countdown.totalMilliseconds < 10000 ? 'orange' : undefined}>
-        {countdown.hours}:{countdown.minutes}:{countdown.seconds}
+        {countdown.formattedHours}:{countdown.formattedMinutes}:{countdown.formattedSeconds}
       </Text>
       
       <Text size="sm" c="dimmed" ta="center" mb="md">
@@ -40,7 +40,7 @@ function Demo() {
       </Text>
       
       <Group gap="xs" justify="center">
-        <Button onClick={countdown.start} disabled={countdown.isRunning || countdown.isCompleted}>
+        <Button onClick={countdown.resume} disabled={countdown.isRunning || countdown.isCompleted}>
           Start
         </Button>
         <Button onClick={countdown.pause} disabled={!countdown.isRunning} variant="outline">
@@ -126,7 +126,7 @@ function Demo() {
                 : undefined
           }
         >
-          {countdown.hours}:{countdown.minutes}:{countdown.seconds}
+          {countdown.formattedHours}:{countdown.formattedMinutes}:{countdown.formattedSeconds}
         </Text>
 
         <Text size="sm" c="dimmed" ta="center" mb="md">
@@ -139,7 +139,10 @@ function Demo() {
         </Text>
 
         <Group gap="xs" justify="center" mb="md">
-          <Button onClick={countdown.start} disabled={countdown.isRunning || countdown.isCompleted}>
+          <Button
+            onClick={countdown.resume}
+            disabled={countdown.isRunning || countdown.isCompleted}
+          >
             Start
           </Button>
           <Button onClick={countdown.pause} disabled={!countdown.isRunning} variant="outline">

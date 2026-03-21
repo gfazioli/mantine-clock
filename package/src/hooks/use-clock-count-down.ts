@@ -1,22 +1,12 @@
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
-import isLeapYear from 'dayjs/plugin/isLeapYear';
 import timezonePlugin from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
-import weekOfYear from 'dayjs/plugin/weekOfYear';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useMounted } from '@mantine/hooks';
 
 dayjs.extend(utc);
 dayjs.extend(timezonePlugin);
-dayjs.extend(weekOfYear);
-dayjs.extend(isLeapYear);
-dayjs.extend(duration);
-
-dayjs.extend(utc);
-dayjs.extend(timezonePlugin);
-dayjs.extend(weekOfYear);
-dayjs.extend(isLeapYear);
 dayjs.extend(duration);
 
 /**
@@ -27,16 +17,16 @@ export interface UseClockCountDownOptions {
   enabled?: boolean;
   /** The timezone to use for the countdown calculations. */
   timezone?: string;
-  /** The frequency (in milliseconds) at which the countdown updates. */
+  /** The frequency (in milliseconds) at which the countdown updates. Minimum 16ms. */
   updateFrequency?: number;
-  /** Whether to use 24-hour format or 12-hour format. */
-  use24Hours?: boolean;
   /** Whether to pad single-digit seconds with a leading zero. */
   padSeconds?: boolean;
   /** Whether to pad single-digit minutes with a leading zero. */
   padMinutes?: boolean;
   /** Whether to pad single-digit hours with a leading zero. */
   padHours?: boolean;
+  /** Whether to pad single-digit days with a leading zero. */
+  padDays?: boolean;
   /** Target date for the countdown (Date object or ISO string). */
   targetDate?: Date | string;
   /** Number of hours to count down from current time. */
@@ -53,40 +43,36 @@ export interface UseClockCountDownOptions {
  * Data returned by the `useClockCountDown` hook.
  */
 export interface ClockCountDownData {
-  /** The remaining years. */
-  year: number;
-  /** The remaining months (1-12). */
-  month: number;
   /** The remaining days. */
-  day: number;
-  /** The remaining weeks. */
-  week: number;
-  /** Whether the current year is a leap year (based on target date). */
-  isLeap: boolean;
-  /** The remaining hours (adjusted for 12/24-hour format). */
-  hours: number | string;
+  days: number;
+  /** The remaining hours. */
+  hours: number;
   /** The remaining minutes. */
-  minutes: number | string;
+  minutes: number;
   /** The remaining seconds. */
-  seconds: number | string;
+  seconds: number;
   /** The remaining milliseconds. */
   milliseconds: number;
-  /** Whether the time is AM or PM (only relevant if use24Hours is false). */
-  amPm?: 'AM' | 'PM';
+  /** Total remaining time in milliseconds. */
+  totalMilliseconds: number;
   /** Whether the countdown has completed (reached zero). */
   isCompleted: boolean;
   /** Whether the countdown is currently running. */
   isRunning: boolean;
-  /** Total remaining time in milliseconds. */
-  totalMilliseconds: number;
-  /** Start the countdown */
-  start: () => void;
+  /** The formatted days string (with padding if enabled). */
+  formattedDays: string;
+  /** The formatted hours string (with padding if enabled). */
+  formattedHours: string;
+  /** The formatted minutes string (with padding if enabled). */
+  formattedMinutes: string;
+  /** The formatted seconds string (with padding if enabled). */
+  formattedSeconds: string;
   /** Pause/stop the countdown */
   pause: () => void;
-  /** Reset the countdown to initial values */
-  reset: () => void;
   /** Resume the countdown from current position */
   resume: () => void;
+  /** Reset the countdown to initial values */
+  reset: () => void;
 }
 
 /**
@@ -94,8 +80,8 @@ export interface ClockCountDownData {
  *
  * This hook allows you to create a countdown timer to a specific date or time duration.
  * You can specify either a target date or a duration (hours, minutes, seconds) from the current time.
- * The hook returns an object containing detailed countdown information and supports timezone,
- * update frequency, and 12/24-hour format options.
+ * The hook returns an object containing detailed countdown information and supports timezone
+ * and update frequency options.
  *
  * @param {UseClockCountDownOptions} options - Configuration options for the countdown.
  * @returns {ClockCountDownData} An object containing the current countdown data.
@@ -113,7 +99,6 @@ export interface ClockCountDownData {
  * const { hours, minutes, seconds } = useClockCountDown({
  *   hours: 12,
  *   updateFrequency: 1000,
- *   use24Hours: false,
  * });
  *
  * @example
@@ -130,10 +115,10 @@ export function useClockCountDown({
   enabled = true,
   timezone = 'UTC',
   updateFrequency = 1000,
-  use24Hours = true,
   padSeconds = false,
   padMinutes = false,
   padHours = false,
+  padDays = false,
   targetDate,
   hours = 0,
   minutes = 0,
@@ -141,6 +126,9 @@ export function useClockCountDown({
   onCountDownCompleted,
 }: UseClockCountDownOptions): ClockCountDownData {
   const mounted = useMounted();
+
+  // Clamp updateFrequency to minimum 16ms
+  const effectiveUpdateFrequency = Math.max(16, updateFrequency);
 
   // State
   const [remainingTime, setRemainingTime] = useState(0);
@@ -151,13 +139,16 @@ export function useClockCountDown({
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const initialDurationRef = useRef(0);
   const targetDateRef = useRef<dayjs.Dayjs | null>(null);
+  const wallClockStartRef = useRef<number>(0);
   const completedCallbackRef = useRef(onCountDownCompleted);
   const initialEnabledRef = useRef(enabled); // Store initial enabled state - set once
 
   // Update callback ref when it changes
   useEffect(() => {
     completedCallbackRef.current = onCountDownCompleted;
-  }, [onCountDownCompleted]); // Calculate initial duration
+  }, [onCountDownCompleted]);
+
+  // Calculate initial duration
   const calculateInitialDuration = useCallback(() => {
     if (!mounted) {
       return 0;
@@ -192,20 +183,28 @@ export function useClockCountDown({
       return;
     }
 
-    const duration = calculateInitialDuration();
-    initialDurationRef.current = duration;
-    setRemainingTime(duration);
-    setIsCompleted(duration <= 0);
+    const dur = calculateInitialDuration();
+    initialDurationRef.current = dur;
+    setRemainingTime(dur);
 
-    // Auto-start if enabled
-    if (enabled && duration > 0) {
+    if (dur <= 0) {
+      setIsCompleted(true);
+      setIsRunning(false);
+      // Fire callback immediately if target is already in the past (A8)
+      if (completedCallbackRef.current) {
+        completedCallbackRef.current();
+      }
+    } else if (enabled) {
+      setIsCompleted(false);
+      wallClockStartRef.current = Date.now();
       setIsRunning(true);
     } else {
+      setIsCompleted(false);
       setIsRunning(false);
     }
   }, [mounted, calculateInitialDuration, enabled]);
 
-  // Timer logic
+  // Timer logic - drift-free
   useEffect(() => {
     if (!mounted || !isRunning || isCompleted) {
       if (intervalRef.current) {
@@ -215,23 +214,32 @@ export function useClockCountDown({
       return;
     }
 
-    intervalRef.current = setInterval(() => {
-      setRemainingTime((prev) => {
-        const newTime = Math.max(0, prev - updateFrequency);
+    const tick = () => {
+      let newTime: number;
 
-        if (newTime <= 0) {
-          setIsCompleted(true);
-          setIsRunning(false);
+      if (targetDate) {
+        // For targetDate mode: recalculate from target each tick (drift-free)
+        const now = dayjs().tz(timezone);
+        newTime = Math.max(0, targetDateRef.current!.diff(now));
+      } else {
+        // For duration mode: compute from wall clock start (drift-free)
+        const elapsed = Date.now() - wallClockStartRef.current;
+        newTime = Math.max(0, initialDurationRef.current - elapsed);
+      }
 
-          // Call completion callback
-          if (completedCallbackRef.current) {
-            completedCallbackRef.current();
-          }
+      setRemainingTime(newTime);
+
+      if (newTime <= 0) {
+        setIsCompleted(true);
+        setIsRunning(false);
+
+        if (completedCallbackRef.current) {
+          completedCallbackRef.current();
         }
+      }
+    };
 
-        return newTime;
-      });
-    }, updateFrequency);
+    intervalRef.current = setInterval(tick, effectiveUpdateFrequency);
 
     return () => {
       if (intervalRef.current) {
@@ -239,141 +247,109 @@ export function useClockCountDown({
         intervalRef.current = null;
       }
     };
-  }, [mounted, isRunning, isCompleted, updateFrequency]);
+  }, [mounted, isRunning, isCompleted, effectiveUpdateFrequency, targetDate, timezone]);
 
   // Control functions
-  const start = useCallback(() => {
-    if (!mounted || isCompleted) {
-      return;
-    }
-    setIsRunning(true);
-  }, [mounted, isCompleted]);
-
   const pause = useCallback(() => {
     setIsRunning(false);
-  }, []);
+    // For duration mode, save remaining so we can resume from it
+    if (!targetDate) {
+      const elapsed = Date.now() - wallClockStartRef.current;
+      const remaining = Math.max(0, initialDurationRef.current - elapsed);
+      initialDurationRef.current = remaining;
+    }
+  }, [targetDate]);
 
   const resume = useCallback(() => {
     if (!mounted || isCompleted || remainingTime <= 0) {
       return;
     }
+    if (!targetDate) {
+      // Reset wall clock start for duration mode
+      wallClockStartRef.current = Date.now();
+    }
     setIsRunning(true);
-  }, [mounted, isCompleted, remainingTime]);
+  }, [mounted, isCompleted, remainingTime, targetDate]);
 
   const reset = useCallback(() => {
     setIsRunning(false);
     setIsCompleted(false);
-    const duration = calculateInitialDuration();
-    initialDurationRef.current = duration;
-    setRemainingTime(duration);
+    const dur = calculateInitialDuration();
+    initialDurationRef.current = dur;
+    setRemainingTime(dur);
+    wallClockStartRef.current = Date.now();
 
     // Restore initial enabled state
-    if (initialEnabledRef.current && duration > 0) {
+    if (initialEnabledRef.current && dur > 0) {
       setIsRunning(true);
     }
   }, [calculateInitialDuration]);
 
+  // Helper to build zeroed return value
+  const buildZeroResult = (completed: boolean, running: boolean): ClockCountDownData => ({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+    milliseconds: 0,
+    totalMilliseconds: 0,
+    isCompleted: completed,
+    isRunning: running,
+    formattedDays: padDays ? '00' : '0',
+    formattedHours: padHours ? '00' : '0',
+    formattedMinutes: padMinutes ? '00' : '0',
+    formattedSeconds: padSeconds ? '00' : '0',
+    pause: completed ? () => {} : pause,
+    resume: completed ? () => {} : resume,
+    reset: completed ? reset : reset,
+  });
+
   // Return static values during SSR
   if (!mounted) {
-    const staticHours = padHours ? '00' : 0;
-    const staticMinutes = padMinutes ? '00' : 0;
-    const staticSeconds = padSeconds ? '00' : 0;
-
-    return {
-      year: 0,
-      month: 1,
-      day: 0,
-      week: 0,
-      isLeap: false,
-      hours: staticHours,
-      minutes: staticMinutes,
-      seconds: staticSeconds,
-      milliseconds: 0,
-      amPm: use24Hours ? undefined : 'AM',
-      isCompleted: false,
-      isRunning: false,
-      totalMilliseconds: 0,
-      start: () => {},
-      pause: () => {},
-      reset: () => {},
-      resume: () => {},
-    };
+    return buildZeroResult(false, false);
   }
 
   // Handle completed state
   if (isCompleted || remainingTime <= 0) {
-    const staticHours = padHours ? '00' : 0;
-    const staticMinutes = padMinutes ? '00' : 0;
-    const staticSeconds = padSeconds ? '00' : 0;
-
-    return {
-      year: 0,
-      month: 0,
-      day: 0,
-      week: 0,
-      isLeap: false,
-      hours: staticHours,
-      minutes: staticMinutes,
-      seconds: staticSeconds,
-      milliseconds: 0,
-      amPm: use24Hours ? undefined : 'AM',
-      isCompleted: true,
-      isRunning: false,
-      totalMilliseconds: 0,
-      start: () => {},
-      pause,
-      reset,
-      resume: () => {},
-    };
+    return buildZeroResult(true, false);
   }
 
   // Calculate time components from remaining time
   const dur = dayjs.duration(remainingTime);
-  const remainingYears = Math.floor(dur.asYears());
-  const remainingMonths = Math.floor(dur.asMonths()) % 12;
-  const remainingDays = Math.floor(dur.asDays()) % 365;
-  const remainingWeeks = Math.floor(dur.asWeeks());
-
-  let remainingHours: number | string = Math.floor(dur.asHours()) % 24;
-  let remainingMinutes: number | string = dur.minutes();
-  let remainingSecondsCount: number | string = dur.seconds();
+  const remainingDays = Math.floor(dur.asDays());
+  const remainingHours = Math.floor(dur.asHours()) % 24;
+  const remainingMinutes = dur.minutes();
+  const remainingSecondsCount = dur.seconds();
   const remainingMilliseconds = dur.milliseconds();
 
-  let amPm: 'AM' | 'PM' | undefined;
-  if (!use24Hours) {
-    amPm = remainingHours >= 12 ? 'PM' : 'AM';
-    remainingHours = remainingHours % 12 || 12;
-  }
-
-  if (padHours) {
-    remainingHours = remainingHours.toString().padStart(2, '0');
-  }
-  if (padMinutes) {
-    remainingMinutes = remainingMinutes.toString().padStart(2, '0');
-  }
-  if (padSeconds) {
-    remainingSecondsCount = remainingSecondsCount.toString().padStart(2, '0');
-  }
-
-  const isLeap = targetDateRef.current ? targetDateRef.current.isLeapYear() : false;
+  const formattedDays = padDays
+    ? remainingDays.toString().padStart(2, '0')
+    : remainingDays.toString();
+  const formattedHours = padHours
+    ? remainingHours.toString().padStart(2, '0')
+    : remainingHours.toString();
+  const formattedMinutes = padMinutes
+    ? remainingMinutes.toString().padStart(2, '0')
+    : remainingMinutes.toString();
+  const formattedSeconds = padSeconds
+    ? remainingSecondsCount.toString().padStart(2, '0')
+    : remainingSecondsCount.toString();
 
   return {
-    year: remainingYears,
-    month: remainingMonths + 1,
-    day: remainingDays,
-    week: remainingWeeks,
-    isLeap,
+    days: remainingDays,
     hours: remainingHours,
     minutes: remainingMinutes,
     seconds: remainingSecondsCount,
     milliseconds: remainingMilliseconds,
-    amPm,
+    totalMilliseconds: remainingTime,
     isCompleted: false,
     isRunning,
-    totalMilliseconds: remainingTime,
-    start,
+    formattedDays,
+    formattedHours,
+    formattedMinutes,
+    formattedSeconds,
     pause,
-    reset,
     resume,
+    reset,
   };
 }

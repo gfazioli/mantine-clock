@@ -107,7 +107,7 @@ function Demo() {
           </Text>
 
           <Group justify="center" gap="sm">
-            <Button onClick={clock.start} disabled={clock.isRunning} variant="filled">
+            <Button onClick={clock.resume} disabled={clock.isRunning} variant="filled">
               Start
             </Button>
             <Button onClick={clock.pause} disabled={!clock.isRunning} variant="outline">
@@ -239,7 +239,7 @@ function Demo() {
           </Text>
 
           <Group justify="center" gap="sm">
-            <Button onClick={clock.start} disabled={clock.isRunning} variant="filled">
+            <Button onClick={clock.resume} disabled={clock.isRunning} variant="filled">
               Start
             </Button>
             <Button onClick={clock.pause} disabled={!clock.isRunning} variant="outline">

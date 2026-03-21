@@ -6,20 +6,20 @@ const code = `
 import { useClockCountDown } from '@gfazioli/mantine-clock';
 
 function Demo() {
-  // Countdown to New Year 2026
+  // Countdown to New Year 2027
   const newYear = useClockCountDown({
     enabled: false,
-    targetDate: '2026-01-01T00:00:00Z',
+    targetDate: '2027-01-01T00:00:00Z',
     timezone: 'UTC',
     padHours: true,
     padMinutes: true,
     padSeconds: true,
   });
 
-  // Halloween countdown (October 31, 2025)
+  // Halloween countdown (October 31, 2027)
   const halloween = useClockCountDown({
     enabled: false,
-    targetDate: '2025-10-31T00:00:00Z',
+    targetDate: '2027-10-31T00:00:00Z',
     timezone: 'Europe/Rome',
     padHours: true,
     padMinutes: true,
@@ -44,10 +44,10 @@ function Demo() {
       ) : (
         <>
           <Text fw={700} size="lg" mb="xs">
-            {countdown.day}d {countdown.hours}:{countdown.minutes}:{countdown.seconds}
+            {countdown.days}d {countdown.formattedHours}:{countdown.formattedMinutes}:{countdown.formattedSeconds}
           </Text>
           <Text size="sm" c="dimmed">
-            {countdown.month} months, {countdown.day} days
+            {countdown.days} days remaining
           </Text>
         </>
       )}
@@ -62,8 +62,8 @@ function Demo() {
       <Button 
         onClick={() => {
           if (allStopped) {
-            newYear.start();
-            halloween.start();
+            newYear.resume();
+            halloween.resume();
           } else {
             newYear.pause();
             halloween.pause();
@@ -76,8 +76,8 @@ function Demo() {
       </Button>
       
       <Group gap="md" grow>
-        <CountdownCard countdown={newYear} title="New Year 2026" emoji="🎊" />
-        <CountdownCard countdown={halloween} title="Halloween 2025" emoji="🎃" />
+        <CountdownCard countdown={newYear} title="New Year 2027" emoji="🎊" />
+        <CountdownCard countdown={halloween} title="Halloween 2027" emoji="🎃" />
       </Group>
     </Stack>
   );
@@ -85,20 +85,20 @@ function Demo() {
 `;
 
 function Demo() {
-  // Countdown to New Year 2026
+  // Countdown to New Year 2027
   const newYear = useClockCountDown({
     enabled: false,
-    targetDate: '2026-01-01T00:00:00Z',
+    targetDate: '2027-01-01T00:00:00Z',
     timezone: 'UTC',
     padHours: true,
     padMinutes: true,
     padSeconds: true,
   });
 
-  // Halloween countdown (October 31, 2025)
+  // Halloween countdown (October 31, 2027)
   const halloween = useClockCountDown({
     enabled: false,
-    targetDate: '2025-10-31T00:00:00Z',
+    targetDate: '2027-10-31T00:00:00Z',
     timezone: 'Europe/Rome',
     padHours: true,
     padMinutes: true,
@@ -125,10 +125,11 @@ function Demo() {
       ) : (
         <>
           <Text fw={700} size="lg" mb="xs">
-            {countdown.day}d {countdown.hours}:{countdown.minutes}:{countdown.seconds}
+            {countdown.days}d {countdown.formattedHours}:{countdown.formattedMinutes}:
+            {countdown.formattedSeconds}
           </Text>
           <Text size="sm" c="dimmed">
-            {countdown.month} months, {countdown.day} days
+            {countdown.days} days remaining
           </Text>
         </>
       )}
@@ -143,8 +144,8 @@ function Demo() {
       <Button
         onClick={() => {
           if (allStopped) {
-            newYear.start();
-            halloween.start();
+            newYear.resume();
+            halloween.resume();
           } else {
             newYear.pause();
             halloween.pause();
@@ -157,8 +158,8 @@ function Demo() {
       </Button>
 
       <Group gap="md" grow>
-        <CountdownCard countdown={newYear} title="New Year 2026" emoji="🎊" />
-        <CountdownCard countdown={halloween} title="Halloween 2025" emoji="🎃" />
+        <CountdownCard countdown={newYear} title="New Year 2027" emoji="🎊" />
+        <CountdownCard countdown={halloween} title="Halloween 2027" emoji="🎃" />
       </Group>
     </Stack>
   );

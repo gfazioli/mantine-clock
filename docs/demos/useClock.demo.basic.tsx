@@ -21,7 +21,7 @@ function Demo() {
     <Paper p="md" withBorder>
       <Title order={4} mb="xs">Digital Clock with Controls</Title>
       <Text fw={700} size="xl" mb="xs">
-        {clock.hours}:{clock.minutes}:{clock.seconds}
+        {clock.formattedHours}:{clock.formattedMinutes}:{clock.formattedSeconds}
       </Text>
       <Text size="sm" c="dimmed" mb="xs">
         {clock.day}/{clock.month}/{clock.year} - Week {clock.week}
@@ -29,9 +29,9 @@ function Demo() {
       <Text size="xs" c="dimmed" mb="sm">
         Status: {clock.isRunning ? 'Running' : 'Paused'} | Leap Year: {clock.isLeap ? 'Yes' : 'No'}
       </Text>
-      
+
       <Group gap="xs">
-        <Button size="xs" onClick={clock.start} disabled={clock.isRunning}>
+        <Button size="xs" onClick={clock.resume} disabled={clock.isRunning}>
           Start
         </Button>
         <Button size="xs" onClick={clock.pause} disabled={!clock.isRunning} variant="outline">
@@ -93,7 +93,7 @@ function Demo() {
           Digital Clock with Controls
         </Title>
         <Text fw={700} size="xl" mb="xs">
-          {clock.hours}:{clock.minutes}:{clock.seconds}
+          {clock.formattedHours}:{clock.formattedMinutes}:{clock.formattedSeconds}
           {!use24Hours && clock.amPm && ` ${clock.amPm}`}
         </Text>
         <Text size="sm" c="dimmed" mb="xs">
@@ -108,7 +108,7 @@ function Demo() {
         </Text>
 
         <Group gap="xs">
-          <Button size="xs" onClick={clock.start} disabled={clock.isRunning}>
+          <Button size="xs" onClick={clock.resume} disabled={clock.isRunning}>
             Start
           </Button>
           <Button size="xs" onClick={clock.pause} disabled={!clock.isRunning} variant="outline">
