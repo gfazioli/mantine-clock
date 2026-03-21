@@ -301,7 +301,7 @@ export function useClockCountDown({
     formattedSeconds: padSeconds ? '00' : '0',
     pause: completed ? () => {} : pause,
     resume: completed ? () => {} : resume,
-    reset: completed ? reset : reset,
+    reset,
   });
 
   // Return static values during SSR
