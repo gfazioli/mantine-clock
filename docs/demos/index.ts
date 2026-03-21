@@ -26,3 +26,7 @@ export { digital } from './Clock.demo.digital';
 export { shapes } from './Clock.demo.shapes';
 export { faceContentDemo } from './Clock.demo.faceContent';
 export { sectorsDemo } from './Clock.demo.sectors';
+export { mountAnimation } from './Clock.demo.mountAnimation';
+export { customHands } from './Clock.demo.customHands';
+export { responsiveSize } from './Clock.demo.responsiveSize';
+export { digitalConfigurator } from './ClockDigital.demo.configurator';

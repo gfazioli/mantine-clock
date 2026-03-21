@@ -534,7 +534,7 @@ interface ClockFaceStaticProps {
   secondaryNumbersProps?: TextProps;
 }
 
-const ClockFaceStatic: React.FC<ClockFaceStaticProps> = React.memo(
+const ClockFaceStatic = React.memo<ClockFaceStaticProps>(
   ({
     getStyles,
     effectiveSize,
@@ -651,8 +651,6 @@ const ClockFaceStatic: React.FC<ClockFaceStaticProps> = React.memo(
   }
 );
 
-ClockFaceStatic.displayName = 'ClockFaceStatic';
-
 interface RealClockProps extends ClockBaseProps, ClockArcsProps {
   time: Date;
   getStyles: GetStylesApi<ClockFactory>;
@@ -660,10 +658,7 @@ interface RealClockProps extends ClockBaseProps, ClockArcsProps {
   geometry: ClockGeometry;
 }
 
-/**
- * RealClock component
- */
-const RealClock: React.FC<RealClockProps> = React.memo((props) => {
+const RealClock = React.memo((props: RealClockProps) => {
   const {
     time,
     timezone,
@@ -1063,8 +1058,6 @@ const RealClock: React.FC<RealClockProps> = React.memo((props) => {
     </Box>
   );
 });
-
-RealClock.displayName = 'RealClock';
 
 export const Clock = factory<ClockFactory>((_props, ref) => {
   const props = useProps('Clock', defaultProps, _props);
