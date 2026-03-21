@@ -80,6 +80,8 @@ export interface TickPosition {
   y: number;
   angle: number;
   transformOrigin: string;
+  /** 'rotation' = circular CSS rotate pattern, 'absolute' = positioned at x,y with angle rotation */
+  positioning: 'rotation' | 'absolute';
 }
 
 export interface NumberPosition {
@@ -152,6 +154,7 @@ export class CircularGeometry implements ClockGeometry {
       y: tickOffset,
       angle: angleDeg,
       transformOrigin: `50% ${this.radius - tickOffset}px`,
+      positioning: 'rotation',
     };
   }
 
@@ -182,6 +185,9 @@ export class CircularGeometry implements ClockGeometry {
 }
 
 // --- Rounded-rectangle geometry ---
+// Distributes ticks and numbers along the perimeter of the rounded rectangle
+// using ray-casting from center. This produces the Apple Watch effect where
+// numbers follow the rectangular edges rather than a circular path.
 
 export class RoundedRectGeometry implements ClockGeometry {
   readonly width: number;
@@ -189,14 +195,19 @@ export class RoundedRectGeometry implements ClockGeometry {
   readonly centerX: number;
   readonly centerY: number;
   private readonly borderRadiusValue: number;
+  private readonly radius: number; // effective radius for hands (half shorter side)
+  private readonly hw: number; // half width
+  private readonly hh: number; // half height
 
   constructor(width: number, height: number, borderRadius: number) {
     this.width = width;
     this.height = height;
     this.centerX = Math.round(width / 2);
     this.centerY = Math.round(height / 2);
-    // Clamp border radius to half the shorter side
     this.borderRadiusValue = Math.min(borderRadius, Math.min(width, height) / 2);
+    this.radius = Math.round(Math.min(width, height) / 2);
+    this.hw = width / 2;
+    this.hh = height / 2;
   }
 
   clipPath(): string {
@@ -207,42 +218,37 @@ export class RoundedRectGeometry implements ClockGeometry {
     return `${this.borderRadiusValue}px`;
   }
 
-  // For tick and number positioning, we distribute them along an elliptical path
-  // that fits inside the rounded rectangle, inset from the edges.
-
   tickPosition(index: number, total: number, tickOffset: number): TickPosition {
-    // Use the same angular approach as circular but with the effective radius
-    // adjusted for the rectangular shape. The "radius" varies by angle.
-    const angleDeg = (360 / total) * index;
-    const angleRad = (angleDeg - 90) * (Math.PI / 180); // -90 to start from top
+    // Clock angle: 0=12 o'clock, 90=3 o'clock, etc.
+    const clockDeg = (360 / total) * index;
+    // Convert to math angle (0=right, counter-clockwise) for ray casting
+    const mathRad = ((clockDeg - 90) * Math.PI) / 180;
 
-    // For a rounded rect, we compute the distance from center to the edge at this angle
-    const edgeDistance = this.distanceToEdge(angleRad);
-    const tickRadius = edgeDistance - tickOffset;
-
-    // Position using polar coordinates from center
-    const x = this.centerX + Math.cos(angleRad) * tickRadius;
-    const y = this.centerY + Math.sin(angleRad) * tickRadius;
+    const dist = this.distanceToEdge(mathRad);
+    // Position the tick at the edge, inset by tickOffset
+    const r = dist - tickOffset;
+    const x = this.centerX + Math.cos(mathRad) * r;
+    const y = this.centerY + Math.sin(mathRad) * r;
 
     return {
       x: Math.round(x),
       y: Math.round(y),
-      angle: angleDeg,
-      // For rounded rect, ticks use absolute positioning + rotation
+      angle: clockDeg, // rotation so tick points inward
       transformOrigin: 'center center',
+      positioning: 'absolute',
     };
   }
 
   numberPosition(hourIndex: number, numberRadius: number): NumberPosition {
-    const angle = (hourIndex * 30 - 90) * (Math.PI / 180);
-    // Scale the number radius based on the edge distance at this angle
-    const edgeDistance = this.distanceToEdge(angle);
-    const maxRadius = Math.min(this.width, this.height) / 2;
-    const scaledRadius = (numberRadius / maxRadius) * edgeDistance * 0.92; // 0.92 to keep inside
+    const mathRad = ((hourIndex * 30 - 90) * Math.PI) / 180;
+    const dist = this.distanceToEdge(mathRad);
+    // Scale: numberRadius is relative to the circular radius, map to edge distance
+    const maxRadius = this.radius;
+    const scaledR = (numberRadius / maxRadius) * dist * 0.92; // 0.92 keeps inside padding
 
     return {
-      x: Math.round(this.centerX + Math.cos(angle) * scaledRadius),
-      y: Math.round(this.centerY + Math.sin(angle) * scaledRadius),
+      x: Math.round(this.centerX + Math.cos(mathRad) * scaledR),
+      y: Math.round(this.centerY + Math.sin(mathRad) * scaledR),
     };
   }
 
@@ -251,9 +257,7 @@ export class RoundedRectGeometry implements ClockGeometry {
   }
 
   handLength(ratio: number): number {
-    // Use the shorter dimension as the reference
-    const minHalf = Math.min(this.width, this.height) / 2;
-    return Math.round(minHalf * ratio);
+    return Math.round(this.radius * ratio);
   }
 
   sectorPath(
@@ -262,31 +266,63 @@ export class RoundedRectGeometry implements ClockGeometry {
     radius: number,
     direction: 'clockwise' | 'counterClockwise'
   ): string {
-    // For rounded rect, still use circular sector paths from center
-    // (the clip-path on the container will clip to the rounded rect shape)
     return describeSectorPath(this.centerX, this.centerY, radius, startDeg, endDeg, direction);
   }
 
-  /** Calculate distance from center to the edge of the rounded rect at a given angle */
-  private distanceToEdge(angleRad: number): number {
-    const hw = this.width / 2;
-    const hh = this.height / 2;
-    const cos = Math.cos(angleRad);
-    const sin = Math.sin(angleRad);
+  /**
+   * Distance from center to the edge of the rounded rectangle at a given math angle.
+   * Accounts for the corner arcs: if the ray hits a corner region, it intersects
+   * the quarter-circle arc instead of the straight edge.
+   */
+  private distanceToEdge(mathRad: number): number {
+    const cos = Math.cos(mathRad);
+    const sin = Math.sin(mathRad);
+    const br = this.borderRadiusValue;
 
-    // Distance to axis-aligned rectangle edge
-    let dist: number;
+    // Distance to the plain rectangle edge
+    let rectDist: number;
     if (Math.abs(cos) < 1e-10) {
-      dist = hh / Math.abs(sin);
+      rectDist = this.hh / Math.abs(sin);
     } else if (Math.abs(sin) < 1e-10) {
-      dist = hw / Math.abs(cos);
+      rectDist = this.hw / Math.abs(cos);
     } else {
-      const dx = hw / Math.abs(cos);
-      const dy = hh / Math.abs(sin);
-      dist = Math.min(dx, dy);
+      rectDist = Math.min(this.hw / Math.abs(cos), this.hh / Math.abs(sin));
     }
 
-    return dist;
+    if (br < 1) {
+      return rectDist;
+    }
+
+    // Check if the hit point falls in a corner region
+    const px = cos * rectDist;
+    const py = sin * rectDist;
+
+    const inCornerX = Math.abs(px) > this.hw - br;
+    const inCornerY = Math.abs(py) > this.hh - br;
+
+    if (!inCornerX || !inCornerY) {
+      // On a straight segment, rect distance is correct
+      return rectDist;
+    }
+
+    // Ray hits a corner region — intersect with the corner circle
+    const cx = (px > 0 ? 1 : -1) * (this.hw - br);
+    const cy = (py > 0 ? 1 : -1) * (this.hh - br);
+
+    // Solve: (t*cos - cx)^2 + (t*sin - cy)^2 = br^2
+    // t^2 - 2t*(cos*cx + sin*cy) + (cx^2 + cy^2 - br^2) = 0
+    const b = -(cos * cx + sin * cy);
+    const c = cx * cx + cy * cy - br * br;
+    const discriminant = b * b - c;
+
+    if (discriminant < 0) {
+      return rectDist; // fallback
+    }
+
+    const sqrtD = Math.sqrt(discriminant);
+    const t = -b + sqrtD; // we want the farther intersection (outer edge)
+
+    return t > 0 ? t : rectDist;
   }
 }
 

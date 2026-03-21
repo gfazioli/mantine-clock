@@ -557,19 +557,21 @@ const ClockFaceStatic: React.FC<ClockFaceStaticProps> = React.memo(
         {(hourTicksOpacity ?? 1) !== 0 &&
           Array.from({ length: 12 }, (_, i) => {
             const pos = geometry.tickPosition(i, 12, tickOffset);
-            return (
-              <Box
-                key={`hour-tick-${i}`}
-                {...getStyles('hourTick', {
-                  style: {
+            const tickStyle =
+              pos.positioning === 'absolute'
+                ? {
+                    top: pos.y,
+                    left: pos.x,
+                    transformOrigin: pos.transformOrigin,
+                    transform: `translate(-50%, -50%) rotate(${pos.angle}deg)`,
+                  }
+                : {
                     top: pos.y,
                     left: '50%',
                     transformOrigin: pos.transformOrigin,
                     transform: `translateX(-50%) rotate(${pos.angle}deg)`,
-                  },
-                })}
-              />
-            );
+                  };
+            return <Box key={`hour-tick-${i}`} {...getStyles('hourTick', { style: tickStyle })} />;
           })}
 
         {/* Minute ticks */}
@@ -581,18 +583,22 @@ const ClockFaceStatic: React.FC<ClockFaceStaticProps> = React.memo(
             }
 
             const pos = geometry.tickPosition(i, 60, tickOffset);
-            return (
-              <Box
-                key={`minute-tick-${i}`}
-                {...getStyles('minuteTick', {
-                  style: {
+            const tickStyle =
+              pos.positioning === 'absolute'
+                ? {
+                    top: pos.y,
+                    left: pos.x,
+                    transformOrigin: pos.transformOrigin,
+                    transform: `translate(-50%, -50%) rotate(${pos.angle}deg)`,
+                  }
+                : {
                     top: pos.y,
                     left: '50%',
                     transformOrigin: pos.transformOrigin,
                     transform: `translateX(-50%) rotate(${pos.angle}deg)`,
-                  },
-                })}
-              />
+                  };
+            return (
+              <Box key={`minute-tick-${i}`} {...getStyles('minuteTick', { style: tickStyle })} />
             );
           })}
 
@@ -801,7 +807,11 @@ const RealClock: React.FC<RealClockProps> = React.memo((props) => {
       })}
     >
       {/* Glass wrapper with shadow */}
-      <Box {...getStyles('glassWrapper')}>
+      <Box
+        {...getStyles('glassWrapper', {
+          style: { width: geometry.width, height: geometry.height },
+        })}
+      >
         {/* Clock face */}
         <Box
           {...getStyles('clockFace', {
@@ -1332,7 +1342,11 @@ export const Clock = factory<ClockFactory>((_props, ref) => {
             },
           })}
         >
-          <Box {...getStyles('glassWrapper')}>
+          <Box
+            {...getStyles('glassWrapper', {
+              style: { width: geometry.width, height: geometry.height },
+            })}
+          >
             <Box
               {...getStyles('clockFace', {
                 style: {
