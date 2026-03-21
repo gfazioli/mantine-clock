@@ -12,6 +12,7 @@ export default function HomePage() {
       <PageHeader data={PACKAGE_DATA} />
       <DocsTabs
         docgen={docgen}
+        componentPrefix="Clock"
         componentsProps={['Clock', 'ClockDigital']}
         componentsStyles={['Clock', 'ClockDigital']}
         stylesApiData={STYLES_API_DATA}
