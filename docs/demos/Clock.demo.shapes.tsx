@@ -7,7 +7,7 @@ import { Clock } from '@gfazioli/mantine-clock';
 
 function Demo() {
   return (
-    <Group gap="xl" align="flex-start">
+    <Group gap="xl" justify="center" align="center">
       {/* Default circle */}
       <Clock size={200} />
 
@@ -32,7 +32,7 @@ function Demo() {
 
 function Demo() {
   return (
-    <Group gap="xl" align="flex-start">
+    <Group gap="xl" justify="center" align="center">
       <Clock size={200} />
       <Clock size={200} shape="rounded-rect" borderRadius={40} />
       <Clock size={200} shape="rounded-rect" aspectRatio={1.2} borderRadius={30} />
