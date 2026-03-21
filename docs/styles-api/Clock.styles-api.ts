@@ -7,6 +7,8 @@ export const ClockStylesApi: StylesApiData<ClockFactory> = {
     clockContainer: 'Main clock container',
     glassWrapper: 'Glass wrapper with shadow effects',
     clockFace: 'Clock face containing all visual elements',
+    faceContent:
+      'Custom content rendered on the clock face, between the background and ticks/hands',
     arcsLayer: 'SVG arcs layer rendered above the face and below the hands',
     hourMarks: 'Container for hour marks and numbers',
     hourTick: 'Hour tick marks (12 positions)',
