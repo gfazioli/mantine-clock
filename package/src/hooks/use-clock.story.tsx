@@ -65,15 +65,13 @@ export const use24HourFormat = () => {
 };
 
 export const PaddedSeconds = () => {
-  const { year, month, day, hours, minutes, seconds, amPm } = useClock({
+  const { year, month, day, hours, formattedMinutes, formattedSeconds, amPm } = useClock({
     timezone: 'UTC',
     updateFrequency: 1000,
     use24Hours: false,
     padSeconds: true,
+    padMinutes: true,
   });
-
-  // Pad minutes for visual consistency
-  const paddedMinutes = minutes.toString().padStart(2, '0');
 
   return (
     <div style={{ fontFamily: 'monospace', padding: '20px' }}>
@@ -81,14 +79,14 @@ export const PaddedSeconds = () => {
       <p>Month: {month}</p>
       <p>Day: {day}</p>
       <p>
-        Time: {hours}:{paddedMinutes}:{seconds} {amPm}
+        Time: {hours}:{formattedMinutes}:{formattedSeconds} {amPm}
       </p>
     </div>
   );
 };
 
 export const PaddedTime = () => {
-  const { year, month, day, hours, minutes, seconds, amPm } = useClock({
+  const { year, month, day, formattedHours, formattedMinutes, formattedSeconds, amPm } = useClock({
     timezone: 'UTC',
     updateFrequency: 1000,
     use24Hours: false,
@@ -103,7 +101,7 @@ export const PaddedTime = () => {
       <p>Month: {month}</p>
       <p>Day: {day}</p>
       <p>
-        Time: {hours}:{minutes}:{seconds} {amPm}
+        Time: {formattedHours}:{formattedMinutes}:{formattedSeconds} {amPm}
       </p>
     </div>
   );
@@ -130,7 +128,7 @@ function ClockDisplay({ clock, title }: { clock: any; title: string }) {
       </Text>
 
       <Group gap="xs" mt="sm">
-        <Button size="xs" onClick={clock.start} disabled={clock.isRunning}>
+        <Button size="xs" onClick={clock.resume} disabled={clock.isRunning}>
           Start
         </Button>
         <Button size="xs" onClick={clock.pause} disabled={!clock.isRunning} variant="outline">

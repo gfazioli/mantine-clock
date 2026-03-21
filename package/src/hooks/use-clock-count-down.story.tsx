@@ -17,7 +17,6 @@ function CountdownDisplay({ countdown, title }: { countdown: any; title: string 
           {String(countdown.hours).padStart(2, '0')}:{String(countdown.minutes).padStart(2, '0')}:
           {String(countdown.seconds).padStart(2, '0')}
         </Text>
-        {countdown.amPm && <Text size="sm">{countdown.amPm}</Text>}
       </Group>
       <Text size="sm" c="dimmed" mt="xs">
         Status:{' '}
