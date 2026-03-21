@@ -656,6 +656,10 @@ This demo showcases how to create a reverse countdown clock by combining the `Cl
 
 The `Clock.Digital` compound component renders a digital clock display. It supports timezone, 12/24-hour format, AM/PM indicator, date display, custom separators, and Mantine size tokens.
 
+<Demo data={demos.digitalConfigurator} />
+
+### Clock.Digital Examples
+
 <Demo data={demos.digital} />
 
 ## Clock Shapes
@@ -678,60 +682,21 @@ The `sectors` prop accepts an array of time ranges that are rendered as coloured
 
 ## Mount Animation
 
-The `Clock` component supports an entrance animation when it first mounts. Enable it with the `withMountAnimation` prop. You can control the animation duration with `mountAnimationDuration` (in milliseconds).
+The `Clock` component supports an entrance animation when it first mounts. Enable it with the `animateOnMount` prop. You can control the animation duration with `animateOnMountDuration` (in milliseconds).
 
-```tsx
-import { Clock } from '@gfazioli/mantine-clock';
-
-function Demo() {
-  return (
-    <Clock
-      size={300}
-      withMountAnimation
-      mountAnimationDuration={800}
-    />
-  );
-}
-```
+<Demo data={demos.mountAnimation} />
 
 ## Custom Hand Rendering
 
-For full control over how hands are drawn, use the `renderHourHand`, `renderMinuteHand`, and `renderSecondHand` render props. Each receives `{ angle, length, center }` and must return an SVG element.
+For full control over how hands are drawn, use the `renderHourHand`, `renderMinuteHand`, and `renderSecondHand` render props. Each receives `{ angle, length, centerX, centerY, width, clockSize }` and must return a React node.
 
-```tsx
-import { Clock } from '@gfazioli/mantine-clock';
-
-function Demo() {
-  return (
-    <Clock
-      size={300}
-      renderSecondHand={({ angle, length, center }) => (
-        <line
-          x1={center}
-          y1={center}
-          x2={center + length * Math.sin((angle * Math.PI) / 180)}
-          y2={center - length * Math.cos((angle * Math.PI) / 180)}
-          stroke="red"
-          strokeWidth={1}
-          strokeLinecap="round"
-        />
-      )}
-    />
-  );
-}
-```
+<Demo data={demos.customHands} />
 
 ## Responsive Size
 
-The `size` prop accepts any valid CSS value, including responsive values via Mantine's `rem()` or viewport units. This makes it easy to build clocks that scale with the viewport.
+The `size` prop accepts any valid CSS value, including `"auto"` to fill the parent container. This makes it easy to build clocks that scale with their container.
 
-```tsx
-import { Clock } from '@gfazioli/mantine-clock';
-
-function Demo() {
-  return <Clock size="min(300px, 50vw)" />;
-}
-```
+<Demo data={demos.responsiveSize} />
 
 ## onTimeChange Callback
 

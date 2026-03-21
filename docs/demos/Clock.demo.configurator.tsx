@@ -78,5 +78,34 @@ export const configurator: MantineDemo = {
       max: 1,
       step: 0.01,
     },
+    // Shape Settings
+    {
+      type: 'select',
+      prop: 'shape',
+      initialValue: 'circle',
+      libraryValue: 'circle',
+      data: [
+        { label: 'Circle', value: 'circle' },
+        { label: 'Rounded Rectangle', value: 'rounded-rect' },
+      ],
+    },
+    {
+      type: 'number',
+      prop: 'borderRadius',
+      initialValue: 40,
+      libraryValue: 40,
+      min: 0,
+      max: 100,
+      step: 1,
+    },
+    {
+      type: 'number',
+      prop: 'aspectRatio',
+      initialValue: 1,
+      libraryValue: 1,
+      min: 0.6,
+      max: 1.5,
+      step: 0.1,
+    },
   ],
 };
