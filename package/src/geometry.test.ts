@@ -94,6 +94,32 @@ describe('geometry', () => {
       // min(400,480)/2 = 200, * 0.5 = 100
       expect(geo.handLength(0.5)).toBe(100);
     });
+
+    it('uses absolute tick positioning along perimeter', () => {
+      const pos = geo.tickPosition(0, 12, 10);
+      expect(pos.angle).toBe(0); // 12 o'clock
+      expect(pos.positioning).toBe('absolute');
+      // 12 o'clock tick should be at top center, inset by tickOffset
+      expect(pos.x).toBe(200); // centerX
+      expect(pos.y).toBeLessThan(240); // above centerY
+    });
+
+    it("positions 3 o'clock tick at right edge", () => {
+      const pos = geo.tickPosition(3, 12, 10);
+      expect(pos.angle).toBe(90);
+      expect(pos.x).toBeGreaterThan(200); // right of center
+    });
+
+    it('positions numbers along perimeter', () => {
+      const pos12 = geo.numberPosition(0, 150);
+      expect(pos12.x).toBe(200); // 12 at top center
+      expect(pos12.y).toBeLessThan(240); // above centerY
+
+      const pos3 = geo.numberPosition(3, 150);
+      expect(pos3.x).toBeGreaterThan(200); // 3 at right
+      expect(pos3.y).toBeGreaterThanOrEqual(230); // near centerY (240)
+      expect(pos3.y).toBeLessThanOrEqual(250);
+    });
   });
 
   describe('createGeometry', () => {
