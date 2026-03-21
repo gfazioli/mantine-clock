@@ -30,3 +30,4 @@ export { mountAnimation } from './Clock.demo.mountAnimation';
 export { customHands } from './Clock.demo.customHands';
 export { responsiveSize } from './Clock.demo.responsiveSize';
 export { digitalConfigurator } from './ClockDigital.demo.configurator';
+export { digitalStylesApi } from './ClockDigital.demo.stylesApi';
