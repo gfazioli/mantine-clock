@@ -389,6 +389,14 @@ export const hooksData = {
         required: true,
         defaultValue: null,
       },
+      start: {
+        name: 'start',
+        type: { name: 'function' },
+        description:
+          'Function to start the countdown (alias for resume)',
+        required: true,
+        defaultValue: null,
+      },
       reset: {
         name: 'reset',
         type: { name: 'function' },
@@ -435,11 +443,23 @@ You can also set an initial time value for a running clock. The clock will start
 
 <Demo data={demos.runningValue} />
 
+## Clock Shapes
+
+By default the `Clock` renders as a circle. You can switch to a rounded-rectangle shape (Apple Watch style) using the `shape` prop. Control the corner radius with `borderRadius` and the vertical stretch with `aspectRatio`.
+
+<Demo data={demos.shapes} />
+
 ## Clock Hands
 
 The `Clock` component allows you to customize the appearance of the clock hands. You can set the color, size, and other properties of the hour, minute, and second hands.
 
 <Demo data={demos.hands} />
+
+## Custom Hand Rendering
+
+For full control over how hands are drawn, use the `renderHourHand`, `renderMinuteHand`, and `renderSecondHand` render props. Each receives `{ angle, length, centerX, centerY, width, clockSize }` and must return a React node.
+
+<Demo data={demos.customHands} />
 
 ## Clock Numbers
 
@@ -489,50 +509,33 @@ Enable with the following props:
 >   - Parsing: start hour = (HH % 12) + (mm/60) + (ss/3600). With Date, values are read in the clock timezone.
 >   - Examples: "12:10" -> slightly past 12 (10 minutes shifts the start by 10/60 of the hour); "3:30" -> halfway between 3 and 4; "15:00" -> same as "3:00".
 > - Timezone
->   - Date inputs are interpreted in the component’s timezone (timezone prop). Time strings are treated as literal time-of-day fields according to the rules above (not absolute timestamps).
+>   - Date inputs are interpreted in the component's timezone (timezone prop). Time strings are treated as literal time-of-day fields according to the rules above (not absolute timestamps).
 > - Validation
 >   - Ranges: HH 0–23 (wrapped to 12h), mm 0–59, ss 0–59. Invalid strings are ignored—use strict formats with optional leading zeros.
 
-## Styling with ClassNames
+## Time Sectors
 
-The `Clock` component supports extensive customization through the `classNames` prop, allowing you to style every part of the clock using CSS modules or custom CSS classes. This approach gives you complete control over the clock's appearance.
+The `sectors` prop accepts an array of time ranges that are rendered as coloured arcs on the clock face. Each sector has `from` and `to` times (in `"HH:MM"` format), a `color`, and an optional `label`.
 
-### Available ClassNames
+<Demo data={demos.sectorsDemo} />
 
-The `Clock` component exposes the following classNames for styling:
+## Face Content
 
-- `root` - Root element of the clock component
-- `clockContainer` - Main clock container
-- `glassWrapper` - Glass wrapper with shadow effects
-- `clockFace` - Clock face containing all visual elements
-- `hourMarks` - Container for hour marks and numbers
-- `hourTick` - Hour tick marks (12 positions)
-- `minuteTick` - Minute tick marks (60 positions, excluding hour positions)
-- `number` - Base styles for hour numbers (1-12)
-- `primaryNumber` - Primary hour numbers (12, 3, 6, 9)
-- `secondaryNumber` - Secondary hour numbers (1, 2, 4, 5, 7, 8, 10, 11)
-- `hand` - Base styles for clock hands
-- `hourHand` - Hour hand specific styles
-- `minuteHand` - Minute hand specific styles
-- `secondHandContainer` - Container for second hand and counterweight
-- `secondHand` - Second hand specific styles
-- `secondHandCounterweight` - Second hand counterweight
-- `centerBlur` - Center blur effect
-- `centerDot` - Center dot at the pivot point
+Use the `faceContent` prop to render arbitrary React content at the centre of the clock face. This is useful for brand logos, labels, or additional information.
 
-### Neon Theme Example
+<Demo data={demos.faceContentDemo} />
 
-The following example demonstrates a complete custom theme using CSS modules with neon effects, animations, and modern styling techniques:
+## Mount Animation
 
-<Demo data={demos.classNames} />
+The `Clock` component supports an entrance animation when it first mounts. Enable it with the `animateOnMount` prop. You can control the animation duration with `animateOnMountDuration` (in milliseconds).
 
-## Styles API
+<Demo data={demos.mountAnimation} />
 
-`Clock` supports [Styles API](https://mantine.dev/styles/styles-api/), you can add styles to any inner element of the component with `classNames` prop. Follow [Styles API](https://mantine.dev/styles/styles-api/) documentation to learn more.
+## Responsive Size
 
-You can customize the appearance of the `Clock` component using the Styles API. This allows you to modify styles for various parts of the component, such as hands, tick marks, numbers, center dot, and more.
+The `size` prop accepts any valid CSS value, including `"auto"` to fill the parent container. This makes it easy to build clocks that scale with their container.
 
-<Demo data={demos.stylesApi} />
+<Demo data={demos.responsiveSize} />
 
 ## Timezone Support
 
@@ -581,6 +584,72 @@ function Demo() {
   );
 }
 ```
+
+## onTimeChange Callback
+
+The `onTimeChange` callback fires on every tick with the current time data. This is useful for synchronising external state or triggering side effects based on the displayed time.
+
+```tsx
+import { useState } from 'react';
+import { Clock } from '@gfazioli/mantine-clock';
+
+function Demo() {
+  const [time, setTime] = useState('');
+
+  return (
+    <>
+      <Clock
+        size={200}
+        onTimeChange={({ hours, minutes, seconds }) => {
+          setTime(`${hours}:${minutes}:${seconds}`);
+        }}
+      />
+      <p>Current time: {time}</p>
+    </>
+  );
+}
+```
+
+## Styling with ClassNames
+
+The `Clock` component supports extensive customization through the `classNames` prop, allowing you to style every part of the clock using CSS modules or custom CSS classes. This approach gives you complete control over the clock's appearance.
+
+### Available ClassNames
+
+The `Clock` component exposes the following classNames for styling:
+
+- `root` - Root element of the clock component
+- `clockContainer` - Main clock container
+- `glassWrapper` - Glass wrapper with shadow effects
+- `clockFace` - Clock face containing all visual elements
+- `hourMarks` - Container for hour marks and numbers
+- `hourTick` - Hour tick marks (12 positions)
+- `minuteTick` - Minute tick marks (60 positions, excluding hour positions)
+- `number` - Base styles for hour numbers (1-12)
+- `primaryNumber` - Primary hour numbers (12, 3, 6, 9)
+- `secondaryNumber` - Secondary hour numbers (1, 2, 4, 5, 7, 8, 10, 11)
+- `hand` - Base styles for clock hands
+- `hourHand` - Hour hand specific styles
+- `minuteHand` - Minute hand specific styles
+- `secondHandContainer` - Container for second hand and counterweight
+- `secondHand` - Second hand specific styles
+- `secondHandCounterweight` - Second hand counterweight
+- `centerBlur` - Center blur effect
+- `centerDot` - Center dot at the pivot point
+
+### Neon Theme Example
+
+The following example demonstrates a complete custom theme using CSS modules with neon effects, animations, and modern styling techniques:
+
+<Demo data={demos.classNames} />
+
+## Styles API
+
+`Clock` supports [Styles API](https://mantine.dev/styles/styles-api/), you can add styles to any inner element of the component with `classNames` prop. Follow [Styles API](https://mantine.dev/styles/styles-api/) documentation to learn more.
+
+You can customize the appearance of the `Clock` component using the Styles API. This allows you to modify styles for various parts of the component, such as hands, tick marks, numbers, center dot, and more.
+
+<Demo data={demos.stylesApi} />
 
 ## Hooks
 
@@ -665,64 +734,3 @@ The `Clock.Digital` compound component renders a digital clock display. It suppo
 ### Clock.Digital Styles API
 
 <Demo data={demos.digitalStylesApi} />
-
-## Clock Shapes
-
-By default the `Clock` renders as a circle. You can switch to a rounded-rectangle shape (Apple Watch style) using the `shape` prop. Control the corner radius with `borderRadius` and the vertical stretch with `aspectRatio`.
-
-<Demo data={demos.shapes} />
-
-## Face Content
-
-Use the `faceContent` prop to render arbitrary React content at the centre of the clock face. This is useful for brand logos, labels, or additional information.
-
-<Demo data={demos.faceContentDemo} />
-
-## Time Sectors
-
-The `sectors` prop accepts an array of time ranges that are rendered as coloured arcs on the clock face. Each sector has `from` and `to` times (in `"HH:MM"` format), a `color`, and an optional `label`.
-
-<Demo data={demos.sectorsDemo} />
-
-## Mount Animation
-
-The `Clock` component supports an entrance animation when it first mounts. Enable it with the `animateOnMount` prop. You can control the animation duration with `animateOnMountDuration` (in milliseconds).
-
-<Demo data={demos.mountAnimation} />
-
-## Custom Hand Rendering
-
-For full control over how hands are drawn, use the `renderHourHand`, `renderMinuteHand`, and `renderSecondHand` render props. Each receives `{ angle, length, centerX, centerY, width, clockSize }` and must return a React node.
-
-<Demo data={demos.customHands} />
-
-## Responsive Size
-
-The `size` prop accepts any valid CSS value, including `"auto"` to fill the parent container. This makes it easy to build clocks that scale with their container.
-
-<Demo data={demos.responsiveSize} />
-
-## onTimeChange Callback
-
-The `onTimeChange` callback fires on every tick with the current time data. This is useful for synchronising external state or triggering side effects based on the displayed time.
-
-```tsx
-import { useState } from 'react';
-import { Clock } from '@gfazioli/mantine-clock';
-
-function Demo() {
-  const [time, setTime] = useState('');
-
-  return (
-    <>
-      <Clock
-        size={200}
-        onTimeChange={({ hours, minutes, seconds }) => {
-          setTime(`${hours}:${minutes}:${seconds}`);
-        }}
-      />
-      <p>Current time: {time}</p>
-    </>
-  );
-}
-```

@@ -20,7 +20,7 @@ import {
   useProps,
   useStyles,
 } from '@mantine/core';
-import { useMergedRef } from '@mantine/hooks';
+import { useCallbackRef, useMergedRef } from '@mantine/hooks';
 import { ClockDigital } from './ClockDigital';
 import {
   createGeometry,
@@ -742,9 +742,10 @@ const RealClock = React.memo((props: RealClockProps) => {
   useEffect(() => {
     if (mountPhase === 'initial') {
       // After first render at 0deg, trigger animation to real angles
-      requestAnimationFrame(() => {
+      const rafId = requestAnimationFrame(() => {
         setMountPhase('animating');
       });
+      return () => cancelAnimationFrame(rafId);
     } else if (mountPhase === 'animating') {
       const timer = setTimeout(
         () => {
@@ -1067,14 +1068,10 @@ export const Clock = factory<ClockFactory>((_props, ref) => {
   const rafRef = useRef<number | null>(null);
   const startTimeRef = useRef<Date | null>(null);
   const realStartTimeRef = useRef<Date | null>(null);
-  const onTimeChangeRef = useRef(_props.onTimeChange);
+  const onTimeChange = useCallbackRef(_props.onTimeChange);
   const containerRef = useRef<HTMLDivElement>(null);
   const [measuredSize, setMeasuredSize] = useState<number | null>(null);
   const mergedRef = useMergedRef(ref, containerRef);
-
-  useEffect(() => {
-    onTimeChangeRef.current = _props.onTimeChange;
-  }, [_props.onTimeChange]);
 
   const {
     // Clock-specific props that should not be passed to DOM
@@ -1130,7 +1127,7 @@ export const Clock = factory<ClockFactory>((_props, ref) => {
     shape,
     aspectRatio,
     borderRadius,
-    onTimeChange,
+    onTimeChange: _onTimeChange,
     renderHourHand,
     renderMinuteHand,
     renderSecondHand,
@@ -1184,7 +1181,7 @@ export const Clock = factory<ClockFactory>((_props, ref) => {
     }
 
     const element = containerRef.current;
-    if (!element) {
+    if (!element || typeof ResizeObserver === 'undefined') {
       return;
     }
 
@@ -1255,15 +1252,13 @@ export const Clock = factory<ClockFactory>((_props, ref) => {
     }
 
     const fireOnTimeChange = (now: Date) => {
-      if (onTimeChangeRef.current) {
-        const tz = timezone && timezone !== '' ? dayjs(now).tz(timezone) : dayjs(now);
-        onTimeChangeRef.current({
-          hours: tz.hour(),
-          minutes: tz.minute(),
-          seconds: tz.second(),
-          milliseconds: tz.millisecond(),
-        });
-      }
+      const tz = timezone && timezone !== '' ? dayjs(now).tz(timezone) : dayjs(now);
+      onTimeChange({
+        hours: tz.hour(),
+        minutes: tz.minute(),
+        seconds: tz.second(),
+        milliseconds: tz.millisecond(),
+      });
     };
 
     const updateTime = () => {
@@ -1309,7 +1304,7 @@ export const Clock = factory<ClockFactory>((_props, ref) => {
         cancelAnimationFrame(rafRef.current);
       }
     };
-  }, [running, value, secondHandBehavior]);
+  }, [running, value, secondHandBehavior, timezone]);
 
   // Prevent hydration mismatch by not rendering dynamic content during SSR
   if (!hasMounted) {
