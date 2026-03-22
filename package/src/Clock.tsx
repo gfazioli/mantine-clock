@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Box,
   BoxProps,
@@ -209,7 +209,7 @@ export interface ClockBaseProps {
   /** Shape of the clock face (default: 'circle') */
   shape?: 'circle' | 'rounded-rect';
 
-  /** Aspect ratio for rounded-rect shape (default: 1, range: 0.6-1.5). Values < 1 = taller, > 1 = wider */
+  /** Aspect ratio for rounded-rect shape (default: 1, range: 0.6-1.5). Values > 1 = taller, < 1 = wider */
   aspectRatio?: number;
 
   /** Border radius in pixels for rounded-rect shape. Default: 20% of shorter side */
@@ -350,134 +350,66 @@ const defaultClockSizes = {
   xl: 512,
 };
 
-const varsResolver = createVarsResolver<ClockFactory>(
-  (
-    theme,
-    {
-      size,
-      color,
-      hourTicksColor,
-      hourTicksOpacity,
-      minuteTicksColor,
-      minuteTicksOpacity,
-      primaryNumbersColor,
-      primaryNumbersOpacity,
-      secondaryNumbersColor,
-      secondaryNumbersOpacity,
-      secondHandColor,
-      minuteHandColor,
-      hourHandColor,
-      secondsArcColor,
-      minutesArcColor,
-      hoursArcColor,
-    }
-  ) => {
-    // For 'auto' mode, use a fallback; the actual size is set via inline style
-    if (size === 'auto') {
-      return {
-        root: {
-          '--clock-size': '400px',
-          '--clock-color': parseThemeColor({ color: color || '', theme }).value,
-          '--clock-hour-ticks-color': parseThemeColor({ color: hourTicksColor || '', theme }).value,
-          '--clock-hour-ticks-opacity': round2(hourTicksOpacity ?? 1).toString(),
-          '--clock-minute-ticks-color': parseThemeColor({ color: minuteTicksColor || '', theme })
-            .value,
-          '--clock-minute-ticks-opacity': round2(minuteTicksOpacity ?? 1).toString(),
-          '--clock-primary-numbers-color': parseThemeColor({
-            color: primaryNumbersColor || '',
-            theme,
-          }).value,
-          '--clock-primary-numbers-opacity': round2(primaryNumbersOpacity ?? 1).toString(),
-          '--clock-secondary-numbers-color': parseThemeColor({
-            color: secondaryNumbersColor || '',
-            theme,
-          }).value,
-          '--clock-secondary-numbers-opacity': round2(secondaryNumbersOpacity ?? 1).toString(),
-          '--clock-second-hand-color': parseThemeColor({ color: secondHandColor || '', theme })
-            .value,
-          '--clock-minute-hand-color': parseThemeColor({ color: minuteHandColor || '', theme })
-            .value,
-          '--clock-hour-hand-color': parseThemeColor({ color: hourHandColor || '', theme }).value,
-          '--clock-seconds-arc-color': parseThemeColor({
-            color: secondsArcColor || secondHandColor || '',
-            theme,
-          }).value,
-          '--clock-minutes-arc-color': parseThemeColor({
-            color: minutesArcColor || minuteHandColor || '',
-            theme,
-          }).value,
-          '--clock-hours-arc-color': parseThemeColor({
-            color: hoursArcColor || hourHandColor || '',
-            theme,
-          }).value,
-        },
-      };
-    }
-
-    const sizeValue = size || 'md';
-    const clockSize =
-      typeof sizeValue === 'string' && sizeValue in defaultClockSizes
-        ? defaultClockSizes[sizeValue as keyof typeof defaultClockSizes]
-        : sizeValue || defaultProps.size!;
-
-    const effectiveSize = Math.round(px(getSize(clockSize, 'clock-size')) as number);
-
-    return {
-      root: {
-        '--clock-size': `${effectiveSize}px`,
-        '--clock-color': parseThemeColor({
-          color: color || '',
-          theme,
-        }).value,
-        '--clock-hour-ticks-color': parseThemeColor({
-          color: hourTicksColor || '',
-          theme,
-        }).value,
-
-        '--clock-hour-ticks-opacity': round2(hourTicksOpacity ?? 1).toString(),
-        '--clock-minute-ticks-color': parseThemeColor({
-          color: minuteTicksColor || '',
-          theme,
-        }).value,
-        '--clock-minute-ticks-opacity': round2(minuteTicksOpacity ?? 1).toString(),
-        '--clock-primary-numbers-color': parseThemeColor({
-          color: primaryNumbersColor || '',
-          theme,
-        }).value,
-        '--clock-primary-numbers-opacity': round2(primaryNumbersOpacity ?? 1).toString(),
-        '--clock-secondary-numbers-color': parseThemeColor({
-          color: secondaryNumbersColor || '',
-          theme,
-        }).value,
-        '--clock-secondary-numbers-opacity': round2(secondaryNumbersOpacity ?? 1).toString(),
-        '--clock-second-hand-color': parseThemeColor({
-          color: secondHandColor || '',
-          theme,
-        }).value,
-        '--clock-minute-hand-color': parseThemeColor({
-          color: minuteHandColor || '',
-          theme,
-        }).value,
-        '--clock-hour-hand-color': parseThemeColor({
-          color: hourHandColor || '',
-          theme,
-        }).value,
-        '--clock-seconds-arc-color': parseThemeColor({
-          color: secondsArcColor || secondHandColor || '',
-          theme,
-        }).value,
-        '--clock-minutes-arc-color': parseThemeColor({
-          color: minutesArcColor || minuteHandColor || '',
-          theme,
-        }).value,
-        '--clock-hours-arc-color': parseThemeColor({
-          color: hoursArcColor || hourHandColor || '',
-          theme,
-        }).value,
-      },
-    };
+const buildCssVars = (
+  theme: Parameters<Parameters<typeof createVarsResolver>[0]>[0],
+  clockSizePx: string,
+  props: {
+    color?: MantineColor;
+    hourTicksColor?: MantineColor;
+    hourTicksOpacity?: number;
+    minuteTicksColor?: MantineColor;
+    minuteTicksOpacity?: number;
+    primaryNumbersColor?: MantineColor;
+    primaryNumbersOpacity?: number;
+    secondaryNumbersColor?: MantineColor;
+    secondaryNumbersOpacity?: number;
+    secondHandColor?: MantineColor;
+    minuteHandColor?: MantineColor;
+    hourHandColor?: MantineColor;
+    secondsArcColor?: MantineColor;
+    minutesArcColor?: MantineColor;
+    hoursArcColor?: MantineColor;
   }
-);
+) => {
+  const c = (color: string) => parseThemeColor({ color, theme }).value;
+  return {
+    '--clock-size': clockSizePx,
+    '--clock-color': c(props.color || ''),
+    '--clock-hour-ticks-color': c(props.hourTicksColor || ''),
+    '--clock-hour-ticks-opacity': round2(props.hourTicksOpacity ?? 1).toString(),
+    '--clock-minute-ticks-color': c(props.minuteTicksColor || ''),
+    '--clock-minute-ticks-opacity': round2(props.minuteTicksOpacity ?? 1).toString(),
+    '--clock-primary-numbers-color': c(props.primaryNumbersColor || ''),
+    '--clock-primary-numbers-opacity': round2(props.primaryNumbersOpacity ?? 1).toString(),
+    '--clock-secondary-numbers-color': c(props.secondaryNumbersColor || ''),
+    '--clock-secondary-numbers-opacity': round2(props.secondaryNumbersOpacity ?? 1).toString(),
+    '--clock-second-hand-color': c(props.secondHandColor || ''),
+    '--clock-minute-hand-color': c(props.minuteHandColor || ''),
+    '--clock-hour-hand-color': c(props.hourHandColor || ''),
+    '--clock-seconds-arc-color': c(props.secondsArcColor || props.secondHandColor || ''),
+    '--clock-minutes-arc-color': c(props.minutesArcColor || props.minuteHandColor || ''),
+    '--clock-hours-arc-color': c(props.hoursArcColor || props.hourHandColor || ''),
+  };
+};
+
+const varsResolver = createVarsResolver<ClockFactory>((theme, props) => {
+  const { size } = props;
+
+  // For 'auto' mode, use a fallback; the actual size is set via inline style
+  if (size === 'auto') {
+    return { root: buildCssVars(theme, '400px', props) };
+  }
+
+  const sizeValue = size || 'md';
+  const clockSize =
+    typeof sizeValue === 'string' && sizeValue in defaultClockSizes
+      ? defaultClockSizes[sizeValue as keyof typeof defaultClockSizes]
+      : sizeValue || defaultProps.size!;
+
+  const effectiveSize = Math.round(px(getSize(clockSize, 'clock-size')) as number);
+
+  return { root: buildCssVars(theme, `${effectiveSize}px`, props) };
+});
 
 /**
  * Parse various time value formats into a Date object
@@ -650,6 +582,7 @@ const ClockFaceStatic = React.memo<ClockFaceStaticProps>(
     );
   }
 );
+ClockFaceStatic.displayName = 'ClockFaceStatic';
 
 interface RealClockProps extends ClockBaseProps, ClockArcsProps {
   time: Date;
@@ -850,9 +783,22 @@ const RealClock = React.memo((props: RealClockProps) => {
                       fill={sector.color || 'var(--clock-second-hand-color-resolved)'}
                       fillOpacity={round2(sector.opacity ?? 0.2)}
                       style={sector.interactive ? { cursor: 'pointer' } : undefined}
+                      role={sector.interactive ? 'button' : undefined}
+                      tabIndex={sector.interactive ? 0 : undefined}
+                      aria-label={sector.interactive ? sector.label : undefined}
                       onClick={
                         sector.interactive && sector.onClick
                           ? () => sector.onClick!(sector)
+                          : undefined
+                      }
+                      onKeyDown={
+                        sector.interactive && sector.onClick
+                          ? (e: React.KeyboardEvent) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                sector.onClick!(sector);
+                              }
+                            }
                           : undefined
                       }
                       onMouseEnter={
@@ -1059,6 +1005,7 @@ const RealClock = React.memo((props: RealClockProps) => {
     </Box>
   );
 });
+RealClock.displayName = 'RealClock';
 
 export const Clock = factory<ClockFactory>((_props, ref) => {
   const props = useProps('Clock', defaultProps, _props);
@@ -1168,7 +1115,10 @@ export const Clock = factory<ClockFactory>((_props, ref) => {
           ) as number
         );
 
-  const geometry = createGeometry(effectiveSize, shape, { aspectRatio, borderRadius });
+  const geometry = useMemo(
+    () => createGeometry(effectiveSize, shape, { aspectRatio, borderRadius }),
+    [effectiveSize, shape, aspectRatio, borderRadius]
+  );
 
   useEffect(() => {
     setHasMounted(true);

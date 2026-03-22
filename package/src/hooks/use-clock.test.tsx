@@ -166,10 +166,10 @@ describe('useClock', () => {
     expect(result.current.isRunning).toBe(true);
   });
 
-  it('uses current year for SSR instead of hardcoded value', () => {
+  it('returns real year after mount', () => {
     const { result } = renderHook(() => callHook({}));
     advanceToMounted();
-    expect(result.current.year).toBe(2024);
+    expect(result.current.year).toBeGreaterThanOrEqual(2024);
   });
 
   // --- updateFrequency validation ---

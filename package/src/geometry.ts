@@ -1,4 +1,9 @@
 import dayjs from 'dayjs';
+import timezonePlugin from 'dayjs/plugin/timezone';
+import utc from 'dayjs/plugin/utc';
+
+dayjs.extend(utc);
+dayjs.extend(timezonePlugin);
 
 // --- Pure helper functions (extracted from RealClock, now module-level) ---
 
@@ -316,7 +321,11 @@ export class RoundedRectGeometry implements ClockGeometry {
     const discriminant = b * b - c;
 
     if (discriminant < 0) {
-      return rectDist; // fallback
+      if (process.env.NODE_ENV !== 'production') {
+        // eslint-disable-next-line no-console
+        console.warn('[Clock] Negative discriminant in distanceToEdge — falling back to rectDist');
+      }
+      return rectDist;
     }
 
     const sqrtD = Math.sqrt(discriminant);
@@ -333,14 +342,13 @@ export function createGeometry(
   options?: { aspectRatio?: number; borderRadius?: number }
 ): ClockGeometry {
   if (shape === 'rounded-rect') {
-    const aspectRatio = Math.max(0.1, options?.aspectRatio ?? 1);
+    const rawAspectRatio = options?.aspectRatio ?? 1;
+    const aspectRatio = Number.isFinite(rawAspectRatio) ? Math.max(0.1, rawAspectRatio) : 1;
     const width = size;
     const height = Math.round(size * aspectRatio);
     // Default border radius: 20% of the shorter side (Apple Watch-like)
-    const borderRadius = Math.max(
-      0,
-      options?.borderRadius ?? Math.round(Math.min(width, height) * 0.2)
-    );
+    const rawBorderRadius = options?.borderRadius ?? Math.round(Math.min(width, height) * 0.2);
+    const borderRadius = Number.isFinite(rawBorderRadius) ? Math.max(0, rawBorderRadius) : 0;
     return new RoundedRectGeometry(width, height, borderRadius);
   }
   return new CircularGeometry(size);
