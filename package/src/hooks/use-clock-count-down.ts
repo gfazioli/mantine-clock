@@ -129,8 +129,10 @@ export function useClockCountDown({
 }: UseClockCountDownOptions): ClockCountDownData {
   const mounted = useMounted();
 
-  // Clamp updateFrequency to minimum 16ms
-  const effectiveUpdateFrequency = Math.max(16, updateFrequency);
+  // Clamp updateFrequency to minimum 16ms, fallback to 1000ms for non-finite values
+  const effectiveUpdateFrequency = Number.isFinite(updateFrequency)
+    ? Math.max(16, updateFrequency)
+    : 1000;
 
   // State
   const [remainingTime, setRemainingTime] = useState(0);
