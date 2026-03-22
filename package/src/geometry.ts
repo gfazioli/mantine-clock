@@ -333,11 +333,14 @@ export function createGeometry(
   options?: { aspectRatio?: number; borderRadius?: number }
 ): ClockGeometry {
   if (shape === 'rounded-rect') {
-    const aspectRatio = options?.aspectRatio ?? 1;
+    const aspectRatio = Math.max(0.1, options?.aspectRatio ?? 1);
     const width = size;
     const height = Math.round(size * aspectRatio);
     // Default border radius: 20% of the shorter side (Apple Watch-like)
-    const borderRadius = options?.borderRadius ?? Math.round(Math.min(width, height) * 0.2);
+    const borderRadius = Math.max(
+      0,
+      options?.borderRadius ?? Math.round(Math.min(width, height) * 0.2)
+    );
     return new RoundedRectGeometry(width, height, borderRadius);
   }
   return new CircularGeometry(size);

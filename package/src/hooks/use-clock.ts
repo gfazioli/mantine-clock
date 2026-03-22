@@ -180,7 +180,7 @@ export function useClock({
   // Return static values when disabled or during SSR
   if (!mounted || !time) {
     return {
-      year: new Date().getFullYear(),
+      year: 0,
       month: 1,
       day: 1,
       week: 1,

@@ -112,11 +112,11 @@ describe('useClockCountDown', () => {
     expect((result.current as any).month).toBeUndefined();
   });
 
-  it('does not have a start method', () => {
+  it('has start as an alias of resume', () => {
     const { result } = renderHook(() => useClockCountDown({ hours: 1 }));
     advanceToMounted();
 
-    expect((result.current as any).start).toBeUndefined();
+    expect(typeof result.current.start).toBe('function');
     expect(typeof result.current.pause).toBe('function');
     expect(typeof result.current.resume).toBe('function');
     expect(typeof result.current.reset).toBe('function');

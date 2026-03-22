@@ -71,6 +71,8 @@ export interface ClockCountDownData {
   pause: () => void;
   /** Resume the countdown from current position */
   resume: () => void;
+  /** Start the countdown (alias for resume) */
+  start: () => void;
   /** Reset the countdown to initial values */
   reset: () => void;
 }
@@ -301,6 +303,7 @@ export function useClockCountDown({
     formattedSeconds: padSeconds ? '00' : '0',
     pause: completed ? () => {} : pause,
     resume: completed ? () => {} : resume,
+    start: completed ? () => {} : resume,
     reset,
   });
 
@@ -350,6 +353,7 @@ export function useClockCountDown({
     formattedSeconds,
     pause,
     resume,
+    start: resume,
     reset,
   };
 }
