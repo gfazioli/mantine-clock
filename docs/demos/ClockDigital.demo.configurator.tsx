@@ -29,6 +29,21 @@ export const digitalConfigurator: MantineDemo = {
       libraryValue: '',
     },
     {
+      type: 'string',
+      prop: 'fontFamily',
+      initialValue: '',
+      libraryValue: '',
+    },
+    {
+      type: 'number',
+      prop: 'gap',
+      initialValue: 0,
+      libraryValue: 0,
+      min: 0,
+      max: 20,
+      step: 1,
+    },
+    {
       type: 'boolean',
       prop: 'use24Hours',
       initialValue: true,
@@ -57,6 +72,12 @@ export const digitalConfigurator: MantineDemo = {
       prop: 'separator',
       initialValue: ':',
       libraryValue: ':',
+    },
+    {
+      type: 'boolean',
+      prop: 'running',
+      initialValue: true,
+      libraryValue: true,
     },
   ],
 };

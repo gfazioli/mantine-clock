@@ -533,7 +533,28 @@ The `Clock` component supports an entrance animation when it first mounts. Enabl
 
 ## Responsive Size
 
-The `size` prop accepts any valid CSS value, including `"auto"` to fill the parent container. This makes it easy to build clocks that scale with their container.
+The `size` prop supports responsive values via Mantine's breakpoint objects. You can pass a single value or an object with breakpoint keys to change the clock size at different screen widths:
+
+```tsx
+// Fixed size
+<Clock size={200} />
+<Clock size="lg" />
+
+// Responsive size — changes at breakpoints
+<Clock size={{ base: "sm", md: 400, lg: "xl" }} />
+
+// Auto size — fills the parent container
+<Clock size="auto" />
+```
+
+`Clock.Digital` also supports responsive `size` and `gap` props using the same pattern:
+
+```tsx
+<Clock.Digital
+  size={{ base: 'xs', md: 'md', lg: 'xl' }}
+  gap={{ base: 2, md: 8 }}
+/>
+```
 
 <Demo data={demos.responsiveSize} />
 

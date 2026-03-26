@@ -229,11 +229,16 @@ function ControllableCountdown() {
 
 - **Real-time Updates**: Automatic time synchronization with configurable frequency
 - **Timezone Support**: Global timezone compatibility with IANA timezone database
-- **Customizable Styling**: Full control over appearance and theming
+- **Clock.Digital**: Compound component for digital clock display with AM/PM, date, and custom separators
+- **Responsive Size**: Breakpoint-based responsive sizing (`{ base: "sm", md: "lg" }`) using Mantine's native CSS media queries
+- **Clock Shapes**: Circle and rounded-rectangle (Apple Watch style) with configurable aspect ratio
+- **Sector Arcs**: Visual arcs aligned to seconds, minutes, and hours hands
+- **Custom Hand Rendering**: Full control via render props for hour, minute, and second hands
+- **Mount Animation**: Entrance animation from 12:00 to current time
+- **Countdown Timer**: `useClockCountDown` hook with target dates, durations, and completion callbacks
+- **Customizable Styling**: Full control over appearance via Styles API and CSS variables
 - **TypeScript Support**: Complete type definitions for better developer experience
 - **Accessibility**: Built with WCAG compliance and screen reader support
-- **Performance Optimized**: Efficient updates with minimal re-renders
-- **Responsive Design**: Adapts to different screen sizes automatically
 
 ## Sponsor
 

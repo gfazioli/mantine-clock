@@ -10,9 +10,12 @@ import {
   parseThemeColor,
   StylesApiProps,
   useProps,
+  useRandomClassName,
   useStyles,
+  type StyleProp,
 } from '@mantine/core';
 import { Timezone } from './Clock';
+import { ClockDigitalMediaVariables } from './ClockDigitalMediaVariables';
 import { useClock } from './hooks/use-clock';
 import classes from './ClockDigital.module.css';
 
@@ -35,14 +38,14 @@ export type ClockDigitalCssVariables = {
 };
 
 export interface ClockDigitalProps extends BoxProps, StylesApiProps<ClockDigitalFactory> {
-  /** Size preset or pixel value */
-  size?: MantineSize | number | (string & {});
+  /** Size preset or pixel value. Supports responsive values via breakpoint objects (e.g., `{ base: "sm", md: "lg" }`) */
+  size?: StyleProp<MantineSize | number | (string & {})>;
   /** Text color */
   color?: MantineColor;
   /** Font family (default: monospace) */
   fontFamily?: string;
-  /** Gap between segments */
-  gap?: number | string;
+  /** Gap between segments. Supports responsive values via breakpoint objects (e.g., `{ base: 4, md: 8 }`) */
+  gap?: StyleProp<number | string>;
   /** Timezone */
   timezone?: Timezone;
   /** 24-hour format (default: true) */
@@ -74,14 +77,6 @@ export type ClockDigitalFactory = Factory<{
   vars: ClockDigitalCssVariables;
 }>;
 
-const defaultDigitalSizes: Record<string, number> = {
-  xs: 14,
-  sm: 20,
-  md: 32,
-  lg: 48,
-  xl: 64,
-};
-
 const defaultDigitalProps: Partial<ClockDigitalProps> = {
   size: 'md',
   use24Hours: true,
@@ -97,24 +92,14 @@ const defaultDigitalProps: Partial<ClockDigitalProps> = {
 };
 
 const digitalVarsResolver = createVarsResolver<ClockDigitalFactory>(
-  (theme, { size, color, fontFamily, gap }) => {
-    const sizeValue = size || 'md';
-    const fontSize =
-      typeof sizeValue === 'number'
-        ? sizeValue
-        : typeof sizeValue === 'string' && sizeValue in defaultDigitalSizes
-          ? defaultDigitalSizes[sizeValue]
-          : 32;
-
-    return {
-      root: {
-        '--clock-digital-size': `${fontSize}px`,
-        '--clock-digital-color': color ? parseThemeColor({ color, theme }).value : '',
-        '--clock-digital-font-family': fontFamily || '',
-        '--clock-digital-gap': typeof gap === 'number' ? `${gap}px` : gap || '',
-      },
-    };
-  }
+  (theme, { color, fontFamily }) => ({
+    root: {
+      '--clock-digital-size': undefined as unknown as string,
+      '--clock-digital-color': color ? parseThemeColor({ color, theme }).value : '',
+      '--clock-digital-font-family': fontFamily || '',
+      '--clock-digital-gap': undefined as unknown as string,
+    },
+  })
 );
 
 export const ClockDigital = factory<ClockDigitalFactory>((_props, ref) => {
@@ -157,6 +142,8 @@ export const ClockDigital = factory<ClockDigitalFactory>((_props, ref) => {
     varsResolver: digitalVarsResolver,
   });
 
+  const responsiveClassName = useRandomClassName();
+
   const clock = useClock({
     enabled: running !== false,
     timezone,
@@ -168,49 +155,55 @@ export const ClockDigital = factory<ClockDigitalFactory>((_props, ref) => {
   });
 
   return (
-    <Box
-      {...getStyles('root')}
-      ref={ref}
-      role="timer"
-      aria-label={`${clock.formattedHours}${separator}${clock.formattedMinutes}${showSeconds ? `${separator}${clock.formattedSeconds}` : ''}`}
-      {...others}
-    >
-      <Box component="span" {...getStyles('segment', { className: getStyles('hours').className })}>
-        {clock.formattedHours}
-      </Box>
-      <Box component="span" {...getStyles('separator')}>
-        {separator}
-      </Box>
+    <>
+      <ClockDigitalMediaVariables size={size} gap={gap} selector={`.${responsiveClassName}`} />
       <Box
-        component="span"
-        {...getStyles('segment', { className: getStyles('minutes').className })}
+        {...getStyles('root', { className: responsiveClassName })}
+        ref={ref}
+        role="timer"
+        aria-label={`${clock.formattedHours}${separator}${clock.formattedMinutes}${showSeconds ? `${separator}${clock.formattedSeconds}` : ''}`}
+        {...others}
       >
-        {clock.formattedMinutes}
+        <Box
+          component="span"
+          {...getStyles('segment', { className: getStyles('hours').className })}
+        >
+          {clock.formattedHours}
+        </Box>
+        <Box component="span" {...getStyles('separator')}>
+          {separator}
+        </Box>
+        <Box
+          component="span"
+          {...getStyles('segment', { className: getStyles('minutes').className })}
+        >
+          {clock.formattedMinutes}
+        </Box>
+        {showSeconds && (
+          <>
+            <Box component="span" {...getStyles('separator')}>
+              {separator}
+            </Box>
+            <Box
+              component="span"
+              {...getStyles('segment', { className: getStyles('seconds').className })}
+            >
+              {clock.formattedSeconds}
+            </Box>
+          </>
+        )}
+        {!use24Hours && showAmPm && clock.amPm && (
+          <Box component="span" {...getStyles('amPm')}>
+            {clock.amPm}
+          </Box>
+        )}
+        {showDate && (
+          <Box component="span" {...getStyles('date')}>
+            {String(clock.day).padStart(2, '0')}/{String(clock.month).padStart(2, '0')}/{clock.year}
+          </Box>
+        )}
       </Box>
-      {showSeconds && (
-        <>
-          <Box component="span" {...getStyles('separator')}>
-            {separator}
-          </Box>
-          <Box
-            component="span"
-            {...getStyles('segment', { className: getStyles('seconds').className })}
-          >
-            {clock.formattedSeconds}
-          </Box>
-        </>
-      )}
-      {!use24Hours && showAmPm && clock.amPm && (
-        <Box component="span" {...getStyles('amPm')}>
-          {clock.amPm}
-        </Box>
-      )}
-      {showDate && (
-        <Box component="span" {...getStyles('date')}>
-          {String(clock.day).padStart(2, '0')}/{String(clock.month).padStart(2, '0')}/{clock.year}
-        </Box>
-      )}
-    </Box>
+    </>
   );
 });
 
