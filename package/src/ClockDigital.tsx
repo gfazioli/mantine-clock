@@ -102,7 +102,7 @@ const digitalVarsResolver = createVarsResolver<ClockDigitalFactory>(
   })
 );
 
-export const ClockDigital = factory<ClockDigitalFactory>((_props, ref) => {
+export const ClockDigital = factory<ClockDigitalFactory>((_props) => {
   const props = useProps('ClockDigital', defaultDigitalProps, _props);
   const {
     size,
@@ -159,7 +159,6 @@ export const ClockDigital = factory<ClockDigitalFactory>((_props, ref) => {
       <ClockDigitalMediaVariables size={size} gap={gap} selector={`.${responsiveClassName}`} />
       <Box
         {...getStyles('root', { className: responsiveClassName })}
-        ref={ref}
         role="timer"
         aria-label={`${clock.formattedHours}${separator}${clock.formattedMinutes}${showSeconds ? `${separator}${clock.formattedSeconds}` : ''}`}
         {...others}
