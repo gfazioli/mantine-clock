@@ -16,10 +16,10 @@ function Demo() {
     padSeconds: true,
   });
 
-  // Halloween countdown (October 31, 2027)
+  // Halloween countdown (October 31, 2026)
   const halloween = useClockCountDown({
     enabled: false,
-    targetDate: '2027-10-31T00:00:00Z',
+    targetDate: '2026-10-31T00:00:00Z',
     timezone: 'Europe/Rome',
     padHours: true,
     padMinutes: true,
@@ -77,7 +77,7 @@ function Demo() {
       
       <Group gap="md" grow>
         <CountdownCard countdown={newYear} title="New Year 2027" emoji="🎊" />
-        <CountdownCard countdown={halloween} title="Halloween 2027" emoji="🎃" />
+        <CountdownCard countdown={halloween} title="Halloween 2026" emoji="🎃" />
       </Group>
     </Stack>
   );
@@ -95,10 +95,10 @@ function Demo() {
     padSeconds: true,
   });
 
-  // Halloween countdown (October 31, 2027)
+  // Halloween countdown (October 31, 2026)
   const halloween = useClockCountDown({
     enabled: false,
-    targetDate: '2027-10-31T00:00:00Z',
+    targetDate: '2026-10-31T00:00:00Z',
     timezone: 'Europe/Rome',
     padHours: true,
     padMinutes: true,
@@ -159,7 +159,7 @@ function Demo() {
 
       <Group gap="md" grow>
         <CountdownCard countdown={newYear} title="New Year 2027" emoji="🎊" />
-        <CountdownCard countdown={halloween} title="Halloween 2027" emoji="🎃" />
+        <CountdownCard countdown={halloween} title="Halloween 2026" emoji="🎃" />
       </Group>
     </Stack>
   );
