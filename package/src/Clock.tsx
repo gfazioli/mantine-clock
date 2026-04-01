@@ -351,8 +351,9 @@ const varsResolver = createVarsResolver<ClockFactory>((theme, props) => {
   };
 });
 
-export const Clock = factory<ClockFactory>((_props, ref) => {
-  const props = useProps('Clock', defaultProps, _props);
+export const Clock = factory<ClockFactory>((_props) => {
+  const { ref, ...restProps } = _props as typeof _props & { ref?: React.Ref<HTMLDivElement> };
+  const props = useProps('Clock', defaultProps, restProps);
   const [time, setTime] = useState(new Date());
   const [hasMounted, setHasMounted] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);

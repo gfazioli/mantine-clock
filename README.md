@@ -19,6 +19,7 @@
 ## Overview
 
 This component is created on top of the [Mantine](https://mantine.dev/) library.
+It requires **Mantine 9.x** and **React 19**.
 
 [Mantine Clock](https://gfazioli.github.io/mantine-clock/) delivers both an analog Clock component and time-management hooks tailored for React applications. 
 
