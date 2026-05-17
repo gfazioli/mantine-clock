@@ -1,7 +1,7 @@
-import { useState } from 'react';
 import { useClockCountDown } from '@gfazioli/mantine-clock';
 import { Button, Group, NumberInput, Paper, Stack, Text, Title } from '@mantine/core';
 import { MantineDemo } from '@mantinex/demo';
+import { useState } from 'react';
 
 const code = `
 import { useClockCountDown } from '@gfazioli/mantine-clock';

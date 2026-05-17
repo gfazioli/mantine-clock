@@ -1,9 +1,9 @@
+import { useMounted } from '@mantine/hooks';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 import timezonePlugin from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useMounted } from '@mantine/hooks';
 
 dayjs.extend(utc);
 dayjs.extend(timezonePlugin);

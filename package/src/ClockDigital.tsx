@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Box,
   BoxProps,
@@ -14,6 +13,7 @@ import {
   useStyles,
   type StyleProp,
 } from '@mantine/core';
+import React from 'react';
 import { Timezone } from './Clock';
 import { ClockDigitalMediaVariables } from './ClockDigitalMediaVariables';
 import { useClock } from './hooks/use-clock';

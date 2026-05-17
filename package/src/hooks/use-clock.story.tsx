@@ -1,5 +1,5 @@
-import React from 'react';
 import { Button, Group, Paper, Stack, Text, Title } from '@mantine/core';
+import React from 'react';
 import { useClock } from './use-clock';
 
 export default {

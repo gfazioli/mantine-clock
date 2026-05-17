@@ -1,5 +1,5 @@
-import React from 'react';
 import { Box, GetStylesApi, Text, TextProps } from '@mantine/core';
+import React from 'react';
 import type { ClockFactory } from './Clock';
 import { TICK_OFFSET_RATIO } from './clock-utils';
 import type { ClockGeometry } from './geometry';

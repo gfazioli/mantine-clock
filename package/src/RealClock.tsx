@@ -1,8 +1,8 @@
+import { Box, GetStylesApi } from '@mantine/core';
 import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 import React, { useEffect, useState } from 'react';
-import { Box, GetStylesApi } from '@mantine/core';
 import type { ClockArcsProps, ClockBaseProps, ClockFactory } from './Clock';
 import {
   CENTER_DOT_RATIO,

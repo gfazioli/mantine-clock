@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   filterProps,
   getBaseValue,
@@ -10,6 +9,7 @@ import {
   type MantineSize,
   type StyleProp,
 } from '@mantine/core';
+import React from 'react';
 
 const defaultDigitalSizes: Record<string, number> = {
   xs: 14,
