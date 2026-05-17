@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
 import { Box, Button, Group, Paper, Stack, Text, Title } from '@mantine/core';
+import React, { useState } from 'react';
 import { useClockCountDown } from './use-clock-count-down';
 
 export default {

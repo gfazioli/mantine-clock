@@ -1,7 +1,7 @@
-import { useState } from 'react';
 import { useClock } from '@gfazioli/mantine-clock';
 import { Button, Group, Paper, Select, Stack, Switch, Text, Title } from '@mantine/core';
 import { MantineDemo } from '@mantinex/demo';
+import { useState } from 'react';
 
 const code = `
 import { useClock } from '@gfazioli/mantine-clock';

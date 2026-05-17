@@ -1,7 +1,3 @@
-import dayjs from 'dayjs';
-import timezone from 'dayjs/plugin/timezone';
-import utc from 'dayjs/plugin/utc';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Box,
   BoxProps,
@@ -21,6 +17,10 @@ import {
   type StyleProp,
 } from '@mantine/core';
 import { useCallbackRef, useMergedRef } from '@mantine/hooks';
+import dayjs from 'dayjs';
+import timezone from 'dayjs/plugin/timezone';
+import utc from 'dayjs/plugin/utc';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { defaultClockProps, parseTimeValue, round2 } from './clock-utils';
 import { ClockDigital } from './ClockDigital';
 import { ClockFaceStatic } from './ClockFaceStatic';
