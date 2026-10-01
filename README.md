@@ -33,13 +33,15 @@ The Clock supports live ticking or static display via a value prop, multiple sec
 ## Installation
 
 ```sh
-npm install @gfazioli/mantine-clock
+npm install @gfazioli/mantine-clock dayjs
 ```
 or 
 
 ```sh
-yarn add @gfazioli/mantine-clock
+yarn add @gfazioli/mantine-clock dayjs
 ```
+
+`dayjs` is a peer dependency: the clocks read and convert the time with it (its `utc` and `timezone` plugins), so install it alongside if your app does not have it yet.
 
 After installation import package styles at the root of your application:
 
