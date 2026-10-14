@@ -34,8 +34,8 @@ Yarn workspaces monorepo with two workspaces: `package/` (npm package) and `docs
 - **`ClockDigital.tsx`** — Compound sub-component (`Clock.Digital`) for digital time display.
 - **`clock-utils.ts`** — Shared utilities: `parseTimeValue`, `round2`, `defaultClockProps`, layout constants.
 - **`geometry.ts`** — Clock geometry calculations (tick positions, number positions, hand lengths, arc paths).
-- **`hooks/use-clock.ts`** — `useClock` hook returning formatted time data.
-- **`hooks/use-clock-count-down.ts`** — `useClockCountDown` hook for countdown timers.
+- **`package/src/hooks/use-clock.ts`** — `useClock` hook returning formatted time data.
+- **`package/src/hooks/use-clock-count-down.ts`** — `useClockCountDown` hook for countdown timers.
 - **`Clock.module.css`** / **`ClockDigital.module.css`** — CSS Modules styles.
 - **`index.ts`** — Public API barrel file.
 
